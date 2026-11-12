@@ -1,0 +1,113 @@
+# Release automation for alpaca.
+#
+# Triggered by pushing a version tag (v*). Builds the standalone alpaca.exe,
+# generates release notes from the real commit history since the previous tag,
+# and publishes the GitHub release with checksums.
+#
+# Full CUDA/CPU bundles (llama.cpp binaries) still require the local llama.cpp
+# build tree and are packaged with scripts\release.ps1, then attached to the
+# release created here.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run tests
+        shell: pwsh
+        env:
+          CGO_ENABLED: "0"
+        run: go test ./...
+
+      - name: Build alpaca.exe
+        shell: pwsh
+        env:
+          CGO_ENABLED: "0"
+        run: |
+          $ErrorActionPreference = "Stop"
+          $tag = $env:GITHUB_REF_NAME
+          $commit = (git rev-parse --short HEAD).Trim()
+          & go build -trimpath -ldflags "-s -w -X main.version=$tag -X main.commit=$commit" -o alpaca.exe ./cmd/alpaca
+          if ($LASTEXITCODE -ne 0) { throw "go build failed" }
+          & .\alpaca.exe --version
+
+      - name: Write SHA256SUMS.txt
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $hash = (Get-FileHash .\alpaca.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content -Path .\SHA256SUMS.txt -Value "$hash *alpaca.exe" -Encoding ASCII
+          Get-Content .\SHA256SUMS.txt
+
+      - name: Generate release notes from commit history
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $tag = $env:GITHUB_REF_NAME
+          $prev = $null
+          git describe --tags --abbrev=0 "$tag~1" 2>$null | ForEach-Object { $prev = $_.Trim() }
+          $range = if ($prev) { "$prev..$tag" } else { $tag }
+          $commits = @(git log --format="- %h %s" $range | Where-Object { $_ -and $_ -notmatch "- \w+ Merge " })
+          $lines = @(
+            "# alpaca $tag",
+            "",
+            "Windows x64 terminal launcher, VRAM/RAM fit estimator, and local coding-agent TUI powered by llama.cpp.",
+            ""
+          )
+          if ($prev) {
+            $lines += "## Changes since $prev"
+          } else {
+            $lines += "## Changes"
+          }
+          $lines += ""
+          $lines += $commits
+          $lines += @(
+            "",
+            "## Assets",
+            "",
+            "- **alpaca.exe** - Standalone Windows x64 executable (CGO_ENABLED=0, `-trimpath`).",
+            "- **SHA256SUMS.txt** - SHA-256 checksums for verifying the download.",
+            "",
+            "Full CUDA/CPU bundles with llama.cpp binaries are packaged with ``scripts\release.ps1`` and attached to this release when available.",
+            "",
+            "## Verify",
+            "",
+            "```powershell",
+            "Get-FileHash .\alpaca.exe -Algorithm SHA256",
+            "```"
+          )
+          Set-Content -Path .\release-notes.md -Value ($lines -join "`n") -Encoding UTF8
+          Get-Content .\release-notes.md | Select-Object -First 12
+
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $tag = $env:GITHUB_REF_NAME
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            gh release edit $tag --title "alpaca $tag" --notes-file .\release-notes.md
+            gh release upload $tag .\alpaca.exe .\SHA256SUMS.txt --clobber
+          } else {
+            gh release create $tag .\alpaca.exe .\SHA256SUMS.txt --title "alpaca $tag" --notes-file .\release-notes.md --verify-tag
+          }
