@@ -126,6 +126,11 @@ func resolveRoot() (string, string) {
 	}
 	if exe, err := os.Executable(); err == nil {
 		dir := filepath.Dir(exe)
+		// Check for self-contained subfolder "alpaca" (keeps drive root ultra-clean: alpaca.exe + alpaca\)
+		sub := filepath.Join(dir, "alpaca")
+		if isDir(sub) && (isDir(filepath.Join(sub, "models")) || isDir(filepath.Join(sub, "bin")) || fileExists(filepath.Join(sub, "config.toml"))) {
+			return sub, ""
+		}
 		if isDir(filepath.Join(dir, "models")) || isDir(filepath.Join(dir, "bin")) || fileExists(filepath.Join(dir, "config.toml")) {
 			return dir, ""
 		}
@@ -133,6 +138,12 @@ func resolveRoot() (string, string) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return ".", ""
+	}
+	if isDir(filepath.Join(cwd, "alpaca")) {
+		sub := filepath.Join(cwd, "alpaca")
+		if isDir(filepath.Join(sub, "models")) || isDir(filepath.Join(sub, "bin")) || fileExists(filepath.Join(sub, "config.toml")) {
+			return sub, ""
+		}
 	}
 	if isDir(filepath.Join(cwd, "dist")) {
 		return filepath.Join(cwd, "dist"), ""

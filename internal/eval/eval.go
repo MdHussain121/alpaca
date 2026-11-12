@@ -280,23 +280,31 @@ func resolveServer(serverBin string, info hw.Info) string {
 	candidates := []string{}
 	if info.HasCUDA {
 		candidates = append(candidates,
+			"alpaca/bin/cuda/llama-server.exe",
 			"bin/cuda/llama-server.exe",
 			"dist/bin/cuda/llama-server.exe",
 		)
 	}
 	candidates = append(candidates,
+		"alpaca/bin/cpu/llama-server.exe",
 		"bin/cpu/llama-server.exe",
 		"dist/bin/cpu/llama-server.exe",
+		"alpaca/bin/cpu-compat/llama-server.exe",
 		"bin/cpu-compat/llama-server.exe",
 		"dist/bin/cpu-compat/llama-server.exe",
 	)
 	if exe, err := os.Executable(); err == nil {
 		dir := filepath.Dir(exe)
 		if info.HasCUDA {
-			candidates = append(candidates, filepath.Join(dir, "bin", "cuda", "llama-server.exe"))
+			candidates = append(candidates,
+				filepath.Join(dir, "alpaca", "bin", "cuda", "llama-server.exe"),
+				filepath.Join(dir, "bin", "cuda", "llama-server.exe"),
+			)
 		}
 		candidates = append(candidates,
+			filepath.Join(dir, "alpaca", "bin", "cpu", "llama-server.exe"),
 			filepath.Join(dir, "bin", "cpu", "llama-server.exe"),
+			filepath.Join(dir, "alpaca", "bin", "cpu-compat", "llama-server.exe"),
 			filepath.Join(dir, "bin", "cpu-compat", "llama-server.exe"),
 		)
 	}
@@ -312,7 +320,7 @@ func resolveModelsDir(mDir string) string {
 	if mDir != "" {
 		return mDir
 	}
-	for _, d := range []string{"models", "."} {
+	for _, d := range []string{"alpaca/models", "models", "."} {
 		if isDir(d) {
 			entries, _ := os.ReadDir(d)
 			for _, e := range entries {
@@ -323,9 +331,11 @@ func resolveModelsDir(mDir string) string {
 		}
 	}
 	if exe, err := os.Executable(); err == nil {
-		d := filepath.Join(filepath.Dir(exe), "models")
-		if isDir(d) {
-			return d
+		dir := filepath.Dir(exe)
+		for _, sub := range []string{filepath.Join(dir, "alpaca", "models"), filepath.Join(dir, "models")} {
+			if isDir(sub) {
+				return sub
+			}
 		}
 	}
 	return "models"

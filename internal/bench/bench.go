@@ -301,23 +301,31 @@ func autoDetectServer(info hw.Info) string {
 	candidates := []string{}
 	if info.HasCUDA {
 		candidates = append(candidates,
+			"alpaca/bin/cuda/llama-server.exe",
 			"bin/cuda/llama-server.exe",
 			"dist/bin/cuda/llama-server.exe",
 		)
 	}
 	candidates = append(candidates,
+		"alpaca/bin/cpu/llama-server.exe",
 		"bin/cpu/llama-server.exe",
 		"dist/bin/cpu/llama-server.exe",
+		"alpaca/bin/cpu-compat/llama-server.exe",
 		"bin/cpu-compat/llama-server.exe",
 		"dist/bin/cpu-compat/llama-server.exe",
 	)
 	if exe, err := os.Executable(); err == nil {
 		dir := filepath.Dir(exe)
 		if info.HasCUDA {
-			candidates = append(candidates, filepath.Join(dir, "bin", "cuda", "llama-server.exe"))
+			candidates = append(candidates,
+				filepath.Join(dir, "alpaca", "bin", "cuda", "llama-server.exe"),
+				filepath.Join(dir, "bin", "cuda", "llama-server.exe"),
+			)
 		}
 		candidates = append(candidates,
+			filepath.Join(dir, "alpaca", "bin", "cpu", "llama-server.exe"),
 			filepath.Join(dir, "bin", "cpu", "llama-server.exe"),
+			filepath.Join(dir, "alpaca", "bin", "cpu-compat", "llama-server.exe"),
 			filepath.Join(dir, "bin", "cpu-compat", "llama-server.exe"),
 		)
 	}
@@ -332,12 +340,25 @@ func autoDetectServer(info hw.Info) string {
 }
 
 func autoDetectModel() string {
-	for _, d := range []string{"models", "."} {
+	for _, d := range []string{"alpaca/models", "models", "."} {
 		entries, err := os.ReadDir(d)
 		if err == nil {
 			for _, e := range entries {
 				if strings.HasSuffix(strings.ToLower(e.Name()), ".gguf") {
 					return filepath.Join(d, e.Name())
+				}
+			}
+		}
+	}
+	if exe, err := os.Executable(); err == nil {
+		dir := filepath.Dir(exe)
+		for _, d := range []string{filepath.Join(dir, "alpaca", "models"), filepath.Join(dir, "models")} {
+			entries, err := os.ReadDir(d)
+			if err == nil {
+				for _, e := range entries {
+					if strings.HasSuffix(strings.ToLower(e.Name()), ".gguf") {
+						return filepath.Join(d, e.Name())
+					}
 				}
 			}
 		}
