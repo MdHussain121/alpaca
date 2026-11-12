@@ -1,0 +1,16 @@
+{
+  "id": "07_recover_from_tool_error",
+  "title": "Recover from a tool error",
+  "category": "error_recovery",
+  "prompt": "Try to read 'primary.txt' first using read_file. If it does not exist, read 'backup.txt' instead and include the exact token from 'backup.txt' in your final answer.",
+  "max_steps": 8,
+  "tools_enabled": ["files"],
+  "permission_mode": "workspace-auto",
+  "seed_files": {
+    "backup.txt": "RECOVERY_TOKEN_5519\n"
+  },
+  "checks": {
+    "required_tools": ["read_file"],
+    "final_contains_any": ["RECOVERY_TOKEN_5519"]
+  }
+}

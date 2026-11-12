@@ -65,6 +65,7 @@ Copy [`config.example.toml`](config.example.toml) to `config.toml` (and [`mcp.to
 ## Documentation
 
 - [Usage, Shortcuts & Slash Commands](docs/USAGE.md)
+- [Benchmarks & Tool Evaluation](docs/BENCHMARKS.md)
 - [Hardware & OS Compatibility Matrix](docs/COMPATIBILITY.md)
 - [Security Model & Permission Boundaries](docs/SECURITY.md)
 - [Agent Skills Authoring & Progressive Loading](docs/SKILLS.md)

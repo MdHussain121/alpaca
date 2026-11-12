@@ -1,0 +1,18 @@
+{
+  "id": "09_ask_user_question",
+  "title": "Ask the user a question",
+  "category": "clarification",
+  "prompt": "I want you to write a file 'greeting.txt', but I haven't decided the tone yet. Call ask_user to ask me whether I want 'formal' or 'casual', wait for my answer, and then write an appropriate greeting to 'greeting.txt'.",
+  "max_steps": 8,
+  "tools_enabled": ["files"],
+  "permission_mode": "workspace-auto",
+  "ask_user_reply": "casual",
+  "checks": {
+    "required_tools": ["ask_user", "write_file"],
+    "expect_ask_user": true,
+    "files_exist": ["greeting.txt"],
+    "files_contain_any": {
+      "greeting.txt": ["hey", "hi", "hello", "casual", "how's", "sup", "yo"]
+    }
+  }
+}

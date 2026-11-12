@@ -1,0 +1,17 @@
+{
+  "id": "01_create_folder_and_files",
+  "title": "Create folder and two files",
+  "category": "filesystem_write",
+  "prompt": "Create a folder named 'notes' and inside it create two files: 'notes/todo.txt' containing 'buy milk' and 'notes/done.txt' containing 'setup complete'. Reply briefly when done.",
+  "max_steps": 8,
+  "tools_enabled": ["files"],
+  "permission_mode": "workspace-auto",
+  "checks": {
+    "required_tools": ["write_file"],
+    "files_exist": ["notes/todo.txt", "notes/done.txt"],
+    "files_contain": {
+      "notes/todo.txt": "buy milk",
+      "notes/done.txt": "setup complete"
+    }
+  }
+}

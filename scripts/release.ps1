@@ -81,7 +81,8 @@ $docSubFiles = @(
     "docs\COMPATIBILITY.md",
     "docs\BUILDING.md",
     "docs\SECURITY.md",
-    "docs\SKILLS.md"
+    "docs\SKILLS.md",
+    "docs\BENCHMARKS.md"
 )
 $promptFiles = @(
     "prompts\system.md",

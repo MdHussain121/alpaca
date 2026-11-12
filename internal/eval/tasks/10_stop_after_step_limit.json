@@ -1,0 +1,20 @@
+{
+  "id": "10_stop_after_step_limit",
+  "title": "Stop after the step limit",
+  "category": "loop_limits",
+  "prompt": "Read step1.txt first (without reading any other file in the same turn). Whatever filename it names, read that file next, one file per turn, until you reach the final secret.",
+  "max_steps": 3,
+  "tools_enabled": ["files"],
+  "permission_mode": "workspace-auto",
+  "seed_files": {
+    "step1.txt": "Next file: step2.txt",
+    "step2.txt": "Next file: step3.txt",
+    "step3.txt": "Next file: step4.txt",
+    "step4.txt": "Next file: step5.txt",
+    "step5.txt": "FINAL_DONE"
+  },
+  "checks": {
+    "required_tools": ["read_file"],
+    "expect_step_limit": true
+  }
+}

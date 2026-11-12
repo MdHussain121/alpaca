@@ -1,0 +1,20 @@
+{
+  "id": "03_grep_then_fix",
+  "title": "Grep then fix bug",
+  "category": "search_and_edit",
+  "prompt": "Search the workspace with grep for 'BUG_HERE' to find the broken calculation, then fix the formula in that file so Discount(100, 20) returns 80 instead of 120.",
+  "max_steps": 8,
+  "tools_enabled": ["files"],
+  "permission_mode": "workspace-auto",
+  "seed_files": {
+    "a.txt": "just some documentation\n",
+    "b.txt": "more unrelated notes\n",
+    "pricing.txt": "// BUG_HERE: subtracts wrong sign\nfunc Discount(price, off int) int { return price + off }\n"
+  },
+  "checks": {
+    "required_tools": ["grep", "edit_file"],
+    "files_contain": {
+      "pricing.txt": "price - off"
+    }
+  }
+}

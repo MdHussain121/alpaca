@@ -1,0 +1,18 @@
+{
+  "id": "04_run_command_and_react",
+  "title": "Run command and react to output",
+  "category": "exec_and_react",
+  "prompt": "Run the command 'cmd /c type check_input.txt' using run_command, read the secret code printed in its output, and write that exact code into 'output.txt'.",
+  "max_steps": 8,
+  "tools_enabled": ["files", "exec"],
+  "permission_mode": "workspace-auto",
+  "seed_files": {
+    "check_input.txt": "CODE_9482_DELTA\n"
+  },
+  "checks": {
+    "required_tools": ["run_command", "write_file"],
+    "files_contain": {
+      "output.txt": "CODE_9482_DELTA"
+    }
+  }
+}

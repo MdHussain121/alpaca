@@ -3,6 +3,7 @@ package config
 import (
 	_ "embed"
 	"encoding/json"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -47,22 +48,56 @@ func ComputeEvalBadge(successPct float64) string {
 	}
 }
 
-// LoadEvalRatings parses the embedded eval_ratings.json and recomputes Badge from Passed/AttemptsTotal.
+// LoadEvalRatings parses eval ratings (checking embedded defaults merged with any disk overrides)
+// and recomputes Badge from Passed/AttemptsTotal.
 func LoadEvalRatings() EvalRatingsDoc {
-	var doc EvalRatingsDoc
-	if len(embeddedEvalRatingsJSON) == 0 {
-		return doc
-	}
-	if err := json.Unmarshal(embeddedEvalRatingsJSON, &doc); err != nil {
-		return EvalRatingsDoc{}
-	}
-	for i := range doc.Models {
-		if doc.Models[i].AttemptsTotal > 0 {
-			doc.Models[i].SuccessRatePct = float64(doc.Models[i].Passed) * 100.0 / float64(doc.Models[i].AttemptsTotal)
+	modelsByFile := make(map[string]EvalModelResult)
+
+	// 1. Load embedded defaults
+	if len(embeddedEvalRatingsJSON) > 0 {
+		var embeddedDoc EvalRatingsDoc
+		if err := json.Unmarshal(embeddedEvalRatingsJSON, &embeddedDoc); err == nil {
+			for _, m := range embeddedDoc.Models {
+				modelsByFile[strings.ToLower(filepath.Base(m.File))] = m
+			}
 		}
-		doc.Models[i].Badge = ComputeEvalBadge(doc.Models[i].SuccessRatePct)
 	}
-	return doc
+
+	// 2. Overlay disk overrides from working directory or app root
+	candidates := []string{
+		"eval_ratings.json",
+		filepath.Join(".alpaca", "eval_ratings.json"),
+		filepath.Join("internal", "config", "eval_ratings.json"),
+	}
+	if exe, err := os.Executable(); err == nil {
+		dir := filepath.Dir(exe)
+		candidates = append(candidates,
+			filepath.Join(dir, "eval_ratings.json"),
+			filepath.Join(dir, ".alpaca", "eval_ratings.json"),
+		)
+	}
+	for _, c := range candidates {
+		if b, err := os.ReadFile(c); err == nil && len(b) > 0 {
+			var diskDoc EvalRatingsDoc
+			if err := json.Unmarshal(b, &diskDoc); err == nil {
+				for _, m := range diskDoc.Models {
+					modelsByFile[strings.ToLower(filepath.Base(m.File))] = m
+				}
+			}
+		}
+	}
+
+	var list []EvalModelResult
+	for _, m := range modelsByFile {
+		if m.AttemptsTotal > 0 {
+			m.SuccessRatePct = float64(m.Passed) * 100.0 / float64(m.AttemptsTotal)
+		}
+		m.Badge = ComputeEvalBadge(m.SuccessRatePct)
+		list = append(list, m)
+	}
+	return EvalRatingsDoc{
+		Models: list,
+	}
 }
 
 // EvalRatingForFile looks up a model's data-driven eval rating by filename.

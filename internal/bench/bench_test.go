@@ -1,4 +1,4 @@
-package main
+﻿package bench
 
 import (
 	"os"
@@ -31,7 +31,7 @@ func TestUpdateMilestones(t *testing.T) {
 }
 
 func TestPromptsDatasetValid(t *testing.T) {
-	path := filepath.Join("testdata", "prompts.json")
+	path := filepath.Join("..", "bench", "data", "prompts.json")
 	if _, err := os.Stat(path); err != nil {
 		path = filepath.Join("..", "..", "perf", "data", "prompts.json")
 	}
@@ -66,3 +66,4 @@ func TestNeedlePromptContainsSecret(t *testing.T) {
 		t.Fatalf("needle prompt missing secret")
 	}
 }
+

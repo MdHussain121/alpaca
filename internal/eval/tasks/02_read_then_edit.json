@@ -1,0 +1,21 @@
+{
+  "id": "02_read_then_edit",
+  "title": "Read then edit a file",
+  "category": "filesystem_edit",
+  "prompt": "Read 'settings.ini' and update only the port from 8080 to 9090 using edit_file, keeping all other lines unchanged.",
+  "max_steps": 8,
+  "tools_enabled": ["files"],
+  "permission_mode": "workspace-auto",
+  "seed_files": {
+    "settings.ini": "env=production\nport=8080\nlog_level=info\n"
+  },
+  "checks": {
+    "required_tools": ["read_file", "edit_file"],
+    "files_contain": {
+      "settings.ini": "port=9090"
+    },
+    "files_also_contain": {
+      "settings.ini": "env=production"
+    }
+  }
+}

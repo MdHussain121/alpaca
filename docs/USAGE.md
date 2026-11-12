@@ -9,6 +9,27 @@
 3. Inspect the live VRAM/RAM fit gauge for the selected model, adjust sliders with `←` / `→`, and press `Enter` to start `llama-server.exe`.
 4. Switch between **Chat**, **Metrics**, and **Logs** (`Tab`) or type `/help` in chat.
 
+## CLI Commands & Subcommands
+
+Alpaca can be launched interactively or invoked for benchmarks and model evaluations:
+
+```powershell
+# Interactive launcher and coding assistant (Bubbletea TUI)
+.\alpaca.exe
+
+# Run model speed, throughput, and latency benchmarks
+.\alpaca.exe bench --model models\my-model.gguf
+
+# Run 10-task tool calling accuracy evaluation & update launcher badges
+.\alpaca.exe eval
+
+# CLI options
+.\alpaca.exe --version
+.\alpaca.exe --help
+```
+
+For complete benchmarking instructions, see [BENCHMARKS.md](BENCHMARKS.md).
+
 ## CLI Flags
 
 - `--version`: Print version, commit, and bundled `llama.cpp` build tag.

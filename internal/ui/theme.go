@@ -491,27 +491,31 @@ func (s styleSet) gauge(width int, ratio float64) string {
 	}
 
 	if s.ascii {
-		bar := strings.Repeat("#", full) + strings.Repeat("-", width-full)
-		return gaugeStyle.Render(bar)
+		filledBar := strings.Repeat("#", full)
+		emptyBar := strings.Repeat("-", width-full)
+		return gaugeStyle.Render(filledBar) + s.muted().Render(emptyBar)
 	}
 
-	var b strings.Builder
-	b.Grow(width * 3)
+	var bFilled strings.Builder
+	bFilled.Grow(width * 3)
 	for i := 0; i < full; i++ {
-		b.WriteRune(blocksFull[0])
+		bFilled.WriteRune(blocksFull[0])
 	}
 	if full < width && frac > 0 {
 		idx := int(frac * float64(len(blocksFull)))
 		if idx >= len(blocksFull) {
 			idx = len(blocksFull) - 1
 		}
-		b.WriteRune(blocksFull[idx])
+		bFilled.WriteRune(blocksFull[idx])
 		full++
 	}
+
+	var bEmpty strings.Builder
+	bEmpty.Grow((width - full) * 3)
 	for i := full; i < width; i++ {
-		b.WriteRune(blocksEmpty)
+		bEmpty.WriteRune(blocksEmpty)
 	}
-	return gaugeStyle.Render(b.String())
+	return gaugeStyle.Render(bFilled.String()) + s.muted().Render(bEmpty.String())
 }
 
 // slider renders a selectable discrete position indicator of exactly width cells.
@@ -541,18 +545,9 @@ func (s styleSet) sliderRatio(width int, ratio float64) string {
 		idx = width - 1
 	}
 	if s.ascii {
-		var b strings.Builder
-		for i := 0; i < width; i++ {
-			switch {
-			case i < idx:
-				b.WriteByte('=')
-			case i == idx:
-				b.WriteByte('O')
-			default:
-				b.WriteByte('-')
-			}
-		}
-		return b.String()
+		left := strings.Repeat("=", idx) + "O"
+		right := strings.Repeat("-", width-1-idx)
+		return s.accent().Render(left) + s.muted().Render(right)
 	}
 	left := strings.Repeat("━", idx) + "●"
 	right := strings.Repeat("─", width-1-idx)

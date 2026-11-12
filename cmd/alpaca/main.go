@@ -13,7 +13,9 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
+	"github.com/MdHussain121/alpaca/internal/bench"
 	"github.com/MdHussain121/alpaca/internal/config"
+	"github.com/MdHussain121/alpaca/internal/eval"
 	"github.com/MdHussain121/alpaca/internal/ui"
 )
 
@@ -23,12 +25,48 @@ var (
 	llamaTag = "b12284"
 )
 
+func printHelp() {
+	fmt.Println(ui.CompactBanner(prefersASCIIBanner()))
+	fmt.Printf("alpaca %s (commit %s, llama.cpp %s)\n\n", version, commit, llamaTag)
+	fmt.Println("Usage:")
+	fmt.Println("  alpaca                    Launch the interactive terminal UI")
+	fmt.Println("  alpaca bench [options]    Run throughput, latency, and memory benchmarks")
+	fmt.Println("  alpaca eval [options]     Evaluate agent tool-use capabilities and update UI badges")
+	fmt.Println("  alpaca --version          Print version and llama.cpp information")
+	fmt.Println("  alpaca --help             Show this help message")
+	fmt.Println()
+	fmt.Println("Benchmark Examples:")
+	fmt.Println("  alpaca bench --model models/model.gguf")
+	fmt.Println("  alpaca bench --model models/model.gguf --repeats 3 --out results.csv")
+	fmt.Println()
+	fmt.Println("Evaluation Examples:")
+	fmt.Println("  alpaca eval                                 # evaluate all models in models/ (3 attempts)")
+	fmt.Println("  alpaca eval --models-dir models --attempts 1 # fast single-pass evaluation")
+	fmt.Println("  alpaca eval --filter Qwen3.5                 # evaluate only matching models")
+}
+
 func main() {
 	if len(os.Args) > 1 {
-		arg := strings.TrimSpace(os.Args[1])
-		if arg == "--version" || arg == "-version" || arg == "-V" || arg == "version" {
+		arg := strings.ToLower(strings.TrimSpace(os.Args[1]))
+		switch arg {
+		case "--version", "-version", "-v", "version":
 			fmt.Println(ui.CompactBanner(prefersASCIIBanner()))
 			fmt.Printf("alpaca %s (commit %s, llama.cpp %s)\n", version, commit, llamaTag)
+			return
+		case "--help", "-help", "-h", "help", "/?":
+			printHelp()
+			return
+		case "eval":
+			if err := eval.Run(os.Args[2:]); err != nil {
+				fmt.Fprintf(os.Stderr, "alpaca eval: %v\n", err)
+				os.Exit(1)
+			}
+			return
+		case "bench":
+			if err := bench.Run(os.Args[2:]); err != nil {
+				fmt.Fprintf(os.Stderr, "alpaca bench: %v\n", err)
+				os.Exit(1)
+			}
 			return
 		}
 	}

@@ -1,0 +1,16 @@
+{
+  "id": "05_fetch_and_summarize",
+  "title": "Fetch a page and summarize",
+  "category": "web_fetch",
+  "prompt": "Fetch http://eval.example.test/release.html using web_fetch and summarize the release version and key feature in one short sentence.",
+  "max_steps": 6,
+  "tools_enabled": ["web"],
+  "permission_mode": "workspace-auto",
+  "seed_http": {
+    "http://eval.example.test/release.html": "<html><head><title>Launcher Release</title></head><body><h1>Launcher v9.4</h1><p>Key feature: zero-copy tensor streaming for pendrives.</p></body></html>"
+  },
+  "checks": {
+    "required_tools": ["web_fetch"],
+    "final_contains_any": ["9.4", "zero-copy", "tensor"]
+  }
+}

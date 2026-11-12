@@ -1,0 +1,14 @@
+{
+  "id": "06_create_and_use_skill",
+  "title": "Create and use a skill",
+  "category": "skills",
+  "prompt": "Save a new skill named 'csv-check' with description 'Validate CSV headers' and body 'Always verify that the first line has comma-separated column names.' using save_skill, then load it with use_skill and confirm you loaded it.",
+  "max_steps": 8,
+  "tools_enabled": ["skills"],
+  "permission_mode": "workspace-auto",
+  "approve_skill_save": true,
+  "checks": {
+    "required_tools": ["save_skill", "use_skill"],
+    "skill_exists": "csv-check"
+  }
+}

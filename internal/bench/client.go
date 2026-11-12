@@ -1,4 +1,4 @@
-package main
+﻿package bench
 
 import (
 	"bufio"
@@ -217,3 +217,4 @@ func (c *benchClient) runPrompt(ctx context.Context, p PromptItem, temp float64,
 	}
 	return res
 }
+
