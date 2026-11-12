@@ -1,0 +1,13 @@
+* text=auto
+*.go text eol=lf
+*.md text eol=lf
+*.sh text eol=lf
+*.golden text eol=lf
+*.sse text eol=lf
+*.json text eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.png binary
+*.ico binary
+*.gguf binary
+*.zip binary

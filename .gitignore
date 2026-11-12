@@ -1,0 +1,33 @@
+# build artefacts
+build/*
+!build/build-llama.bat
+dist/bin/
+dist/models/
+dist/logs/
+dist/presets/
+dist/tools/
+dist/workspace/
+dist/sessions/
+dist/skills/
+dist/.alpaca/
+dist/*.zip
+dist/THIRD_PARTY_NOTICES.md
+dist/config.toml
+dist/mcp.toml.example
+dist/SHA256SUMS.txt
+dist/release/
+staging/
+release-evidence/
+*.exe
+*.dll
+*.test
+
+# local state & private docs
+.freebuff/
+*.log
+.DS_Store
+AUDIT_REPORT.md
+FIX_REPORT.md
+*.private.md
+.gguf-cache.json
+.gguf-cache.json.tmp

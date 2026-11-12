@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-11-12T18:22:51+05:30",
+  "models": [
+    {
+      "file": "LFM2.5-8B-A1B-Q4_0.gguf",
+      "model_name": "LFM2.5-8B-A1B-Q4_0",
+      "tasks_total": 10,
+      "attempts_total": 30,
+      "passed": 28,
+      "success_rate_pct": 93.33333333333333,
+      "avg_steps": 2.7666666666666666,
+      "avg_sec": 2.841331626666666,
+      "badge": "recommended"
+    },
+    {
+      "file": "Qwen3.5-4B-3D-Coder-Q4_K_M.gguf",
+      "model_name": "Qwen3.5-4B-3D-Coder-Q4_K_M",
+      "tasks_total": 10,
+      "attempts_total": 30,
+      "passed": 30,
+      "success_rate_pct": 100,
+      "avg_steps": 2.8,
+      "avg_sec": 4.252458803333334,
+      "badge": "recommended"
+    },
+    {
+      "file": "Spark-X2.6-4B-abliterated-Q4_K_M.gguf",
+      "model_name": "Spark-X2.6-4B-abliterated-Q4_K_M",
+      "tasks_total": 10,
+      "attempts_total": 30,
+      "passed": 30,
+      "success_rate_pct": 100,
+      "avg_steps": 3,
+      "avg_sec": 3.69811719,
+      "badge": "recommended"
+    },
+    {
+      "file": "Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf",
+      "model_name": "Tiel-Coder-35B-A3B-UD-IQ4_XS",
+      "tasks_total": 10,
+      "attempts_total": 30,
+      "passed": 28,
+      "success_rate_pct": 93.33333333333333,
+      "avg_steps": 2.8333333333333335,
+      "avg_sec": 25.932456559999995,
+      "badge": "recommended"
+    }
+  ]
+}

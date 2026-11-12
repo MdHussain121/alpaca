@@ -1,0 +1,50 @@
+ alpaca  ·  portable model launcher                                                                                                                                   ● CUDA · RTX 4060 Laptop GPU 8 GB 
+  ╭─╮╭─╮    ▄▀█ █   █▀█ ▄▀█ █▀▀ ▄▀█                                                                                                                                                                     
+  │ •  ╰─╮  █▀█ █▄▄ █▀▀ █▀█ █▄▄ █▀█                                                                                                                                                                     
+  │ ═══╭─╯  portable launcher · llama.cpp                                                                                                                                                               
+╭──────────────────────────────────────────────────────────────────────────╮╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Models                                                                   ││ Settings                                                                                                                 │
+│ 1 model(s)                                                               ││   Context            ━━━●────── 8K                                                                                       │
+│ ▸ Demo-Coder-8B                                                          ││   K cache            q8_0  auto: q8_0/q8_0 (1.2G free)                                                                   │
+│   Q4_K_M · 8.0B · 36L · qwen3                                            ││   V cache            q8_0  forces flash attn                                                                             │
+│                                                                          ││   Flash attn         ON (required)                                                                                       │
+│                                                                          ││   GPU layers         ━━━━━━━━━● all (36)                                                                                 │
+│                                                                          ││   KV offload         on  KV stored in VRAM                                                                               │
+│                                                                          ││   Auto fit           off                                                                                                 │
+│                                                                          ││   Auto KV            on (q8_0/q8_0)  auto: q8_0/q8_0 (1.2G free)                                                         │
+│                                                                          ││   Load mode          auto (none)  none on safe GPU fit, mmap otherwise                                                   │
+│                                                                          ││   Warmup             on  off skips startup pass (--no-warmup)                                                            │
+│                                                                          ││   Speculative        none  opt-in draftless ngram-mod                                                                    │
+│                                                                          ││   Threads            ●───────── auto (default)  GPU offload: default                                                     │
+│                                                                          ││   Priority           auto (normal)  high (--prio 2) on CPU dense                                                         │
+│                                                                          ││   Batch              ━━━━━━━●── 2048                                                                                     │
+│                                                                          ││   Ubatch             ━━●─────── 512                                                                                      │
+│                                                                          ││   Parallel slots     ●───────── 1                                                                                        │
+│                                                                          ││   Temp               ━━━●────── 0.70                                                                                     │
+│                                                                          ││   Top-p              ━━━━━━━━━● 0.95                                                                                     │
+│                                                                          ││   Top-k              ━━━━●───── 40                                                                                       │
+│                                                                          ││   Min-p              ●───────── 0.00                                                                                     │
+│                                                                          ││   Reasoning          auto  thinking mode                                                                                 │
+│                                                                          ││   Reasoning effort   ●───────── default                                                                                  │
+│                                                                          ││   Reasoning budget   ●───────── auto                                                                                     │
+│                                                                          ││   Launch mode        TUI chat  chat in terminal after launch                                                             │
+│                                                                          ││   Show thinking      on                                                                                                  │
+│                                                                          ││   Max tokens         ●───────── unlim                                                                                    │
+│                                                                          ││   System prompt      —  enter to edit                                                                                    │
+│                                                                          ││   Jinja template     on                                                                                                  │
+│                                                                          ││   Web UI             off (API only)  browser page disabled                                                               │
+│                                                                          ││   Vision projector   —  enter path to mmproj .gguf                                                                       │
+│                                                                          ││   Port               8080                                                                                                │
+│                                                                          ││   Expose on LAN      no (127.0.0.1)                                                                                      │
+│                                                                          ││   tab panels · ←→ slide · enter edit · t theme · 1/34                                                                    │
+╰──────────────────────────────────────────────────────────────────────────╯╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Memory                                                                                                                                                                                               │
+│ VRAM ██████████████████████████████████████████████████████████▉░░░░░░░░░░░░░░░░░░░░░ 5.8/8.0 GB   RAM ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 0.0/12.0 GB  │
+│   weights 4.7G GPU · KV 0.6G GPU · comp 0.5G GPU · compute buffer estimated                                                                                                                          │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Command                                                                                                                                                                                              │
+│ llama-server … q8_0 -ctv q8_0 -fa on -ngl all --fit off -b 2048 -ub 512 -np 1 -lm none --temp 0.7 --top-p 0.95 --top-k 40 --min-p 0 --jinja --host 127.0.0.1 --port 8080 --no-webui --no-slots -lv 4 │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+↑↓ model · tab settings · enter launch · / filter · o path · p presets · s save · c copy · C local · t theme · ? help · q quit                                                                          

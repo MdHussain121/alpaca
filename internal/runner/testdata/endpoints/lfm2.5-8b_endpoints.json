@@ -1,0 +1,142 @@
+{
+  "input_tokens": {
+    "input_tokens": 187,
+    "object": "response.input_tokens"
+  },
+  "props": {
+    "bos_token": "\u003c|startoftext|\u003e",
+    "build_info": "b1-9e9619d",
+    "chat_template": "{{- bos_token -}}\n{%- set preserve_thinking = preserve_thinking | default(false) -%}\n\n{%- macro format_arg_value(arg_value) -%}\n    {%- if arg_value is string -%}\n        {{- \"'\" + arg_value + \"'\" -}}\n    {%- elif arg_value is mapping -%}\n        {{- arg_value | tojson -}}\n    {%- else -%}\n        {{- arg_value | string -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro parse_content(content) -%}\n    {%- if content is string -%}\n        {{- content -}}\n    {%- else -%}\n        {%- set _ns = namespace(result=\"\") -%}\n        {%- for item in content -%}\n            {%- if item[\"type\"] == \"image\" -%}\n                {%- set _ns.result = _ns.result + \"\u003cimage\u003e\" -%}\n            {%- elif item[\"type\"] == \"text\" -%}\n                {%- set _ns.result = _ns.result + item[\"text\"] -%}\n            {%- else -%}\n                {%- set _ns.result = _ns.result + item | tojson -%}\n            {%- endif -%}\n        {%- endfor -%}\n        {{- _ns.result -}}\n    {%- endif -%}\n{%- endmacro -%}\n\n{%- macro render_tool_calls(tool_calls) -%}\n    {%- set tool_calls_ns = namespace(tool_calls=[]) -%}\n    {%- for tool_call in tool_calls -%}\n        {%- set func_name = tool_call[\"function\"][\"name\"] -%}\n        {%- set func_args = tool_call[\"function\"][\"arguments\"] -%}\n        {%- set args_ns = namespace(arg_strings=[]) -%}\n        {%- for arg_name, arg_value in func_args.items() -%}\n            {%- set args_ns.arg_strings = args_ns.arg_strings + [arg_name + \"=\" + format_arg_value(arg_value)] -%}\n        {%- endfor -%}\n        {%- set tool_calls_ns.tool_calls = tool_calls_ns.tool_calls + [func_name + \"(\" + (args_ns.arg_strings | join(\", \")) + \")\"] -%}\n    {%- endfor -%}\n    {{- \"\u003c|tool_call_start|\u003e[\" + (tool_calls_ns.tool_calls | join(\", \")) + \"]\u003c|tool_call_end|\u003e\" -}}\n{%- endmacro -%}\n\n{%- set ns = namespace(system_prompt=\"\", last_user_index=-1) -%}\n{%- if messages[0][\"role\"] == \"system\" -%}\n    {%- if messages[0].get(\"content\") -%}\n        {%- set ns.system_prompt = parse_content(messages[0][\"content\"]) -%}\n    {%- endif -%}\n    {%- set messages = messages[1:] -%}\n{%- endif -%}\n{%- if tools -%}\n    {%- set ns.system_prompt = ns.system_prompt + (\"\\n\" if ns.system_prompt else \"\") + \"List of tools: [\" -%}\n    {%- for tool in tools -%}\n        {%- if tool is not string -%}\n            {%- set tool = tool | tojson -%}\n        {%- endif -%}\n        {%- set ns.system_prompt = ns.system_prompt + tool -%}\n        {%- if not loop.last -%}\n            {%- set ns.system_prompt = ns.system_prompt + \", \" -%}\n        {%- endif -%}\n    {%- endfor -%}\n    {%- set ns.system_prompt = ns.system_prompt + \"]\" -%}\n{%- endif -%}\n{%- if ns.system_prompt -%}\n    {{- \"\u003c|im_start|\u003esystem\\n\" + ns.system_prompt + \"\u003c|im_end|\u003e\\n\" -}}\n{%- endif -%}\n{%- for message in messages -%}\n    {%- if message[\"role\"] == \"user\" -%}\n        {%- set ns.last_user_index = loop.index0 -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- for message in messages -%}\n    {{- \"\u003c|im_start|\u003e\" + message.role + \"\\n\" -}}\n    {%- if message.role == \"assistant\" -%}\n        {%- generation -%}\n        {%- if message.thinking is defined and (preserve_thinking or loop.index0 \u003e ns.last_user_index) -%}\n            {{- \"\u003cthink\u003e\" + message.thinking + \"\u003c/think\u003e\" -}}\n        {%- endif -%}\n        {%- set _cfm_tag = \"CONTINUE_FINAL_MESSAGE_TAG \" -%}\n        {%- set _has_cfm = false -%}\n        {%- if message.content is defined -%}\n            {%- set content = parse_content(message.content) -%}\n            {%- if not (preserve_thinking or loop.index0 \u003e ns.last_user_index) -%}\n                {%- if \"\u003c/think\u003e\" in content -%}\n                    {%- set content = content.split(\"\u003c/think\u003e\")[-1] | trim -%}\n                {%- endif -%}\n            {%- endif -%}\n            {%- if message.tool_calls is defined and content.endswith(_cfm_tag) -%}\n                {%- set _has_cfm = true -%}\n                {%- set _trunc_len = (content | length) - (_cfm_tag | length) -%}\n                {{- content[:_trunc_len] -}}\n            {%- else -%}\n                {{- content -}}\n            {%- endif -%}\n        {%- endif -%}\n        {%- if message.tool_calls is defined -%}\n            {{- render_tool_calls(message.tool_calls) -}}\n        {%- endif -%}\n        {%- if _has_cfm -%}\n            {{- _cfm_tag -}}\n        {%- endif -%}\n        {{- \"\u003c|im_end|\u003e\\n\" -}}\n        {%- endgeneration -%}\n    {%- else %}\n        {%- if message.get(\"content\") -%}\n            {{- parse_content(message[\"content\"]) -}}\n        {%- endif -%}\n        {{- \"\u003c|im_end|\u003e\\n\" -}}\n    {%- endif %}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{- \"\u003c|im_start|\u003eassistant\\n\" -}}\n{%- endif -%}",
+    "chat_template_caps": {
+      "reasoning_effort_levels": [],
+      "supports_object_arguments": true,
+      "supports_parallel_tool_calls": true,
+      "supports_preserve_reasoning": false,
+      "supports_reasoning_effort": false,
+      "supports_string_content": true,
+      "supports_system_role": true,
+      "supports_tool_calls": true,
+      "supports_tools": true,
+      "supports_typed_content": true
+    },
+    "cors_proxy_enabled": false,
+    "default_generation_settings": {
+      "n_ctx": 8192,
+      "params": {
+        "adaptive_decay": 0.8999999761581421,
+        "adaptive_target": -1,
+        "backend_sampling": false,
+        "chat_format": "Content-only",
+        "dry_allowed_length": 2,
+        "dry_base": 1.75,
+        "dry_multiplier": 0,
+        "dry_penalty_last_n": 64,
+        "dynatemp_exponent": 1,
+        "dynatemp_range": 0,
+        "frequency_penalty": 0,
+        "generation_prompt": "",
+        "ignore_eos": false,
+        "lora": [],
+        "max_tokens": -1,
+        "min_keep": 0,
+        "min_p": 0,
+        "mirostat": 0,
+        "mirostat_eta": 0.10000000149011612,
+        "mirostat_tau": 5,
+        "n_discard": 0,
+        "n_keep": 0,
+        "n_predict": -1,
+        "n_probs": 0,
+        "post_sampling_probs": false,
+        "presence_penalty": 0,
+        "reasoning_format": "none",
+        "reasoning_in_content": false,
+        "repeat_last_n": 64,
+        "repeat_penalty": 1,
+        "samplers": [
+          "penalties",
+          "dry",
+          "top_n_sigma",
+          "top_k",
+          "typ_p",
+          "top_p",
+          "min_p",
+          "xtc",
+          "temperature"
+        ],
+        "seed": 4294967295,
+        "speculative.types": "none",
+        "stream": false,
+        "temperature": 0.699999988079071,
+        "timings_per_token": false,
+        "top_k": 40,
+        "top_n_sigma": -1,
+        "top_p": 0.949999988079071,
+        "typical_p": 1,
+        "xtc_probability": 0,
+        "xtc_threshold": 0.10000000149011612
+      }
+    },
+    "endpoint_metrics": false,
+    "endpoint_props": false,
+    "endpoint_slots": false,
+    "eos_token": "\u003c|im_end|\u003e",
+    "is_sleeping": false,
+    "media_marker": "\u003c__media_Uz6gaE3ZJcyC5MVtbwKHNcT3YVxTVViE__\u003e",
+    "modalities": {
+      "audio": false,
+      "video": false,
+      "vision": false
+    },
+    "model_alias": "models/LFM2.5-8B-A1B-Q4_0.gguf",
+    "model_ftype": "Q4_0",
+    "model_path": "models/LFM2.5-8B-A1B-Q4_0.gguf",
+    "total_slots": 1,
+    "ui": false,
+    "ui_settings": {}
+  },
+  "tokenize": {
+    "tokens": [
+      {
+        "id": 35808,
+        "piece": "Hello"
+      },
+      {
+        "id": 20,
+        "piece": ","
+      },
+      {
+        "id": 1530,
+        "piece": " world"
+      },
+      {
+        "id": 9,
+        "piece": "!"
+      },
+      {
+        "id": 969,
+        "piece": " This"
+      },
+      {
+        "id": 355,
+        "piece": " is"
+      },
+      {
+        "id": 267,
+        "piece": " a"
+      },
+      {
+        "id": 17568,
+        "piece": " token"
+      },
+      {
+        "id": 1426,
+        "piece": " test"
+      },
+      {
+        "id": 22,
+        "piece": "."
+      }
+    ]
+  }
+}

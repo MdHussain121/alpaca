@@ -1,0 +1,41 @@
+# alpaca configuration
+# Copy to config.toml next to alpaca.exe (optional; alpaca creates defaults on first run).
+
+# Color theme: mocha, tokyo-night, dracula, gruvbox, nord, rose-pine, kanagawa, monokai, solarized-dark, cyberpunk
+theme = "mocha"
+
+# Backend preference: "auto" (CUDA -> Vulkan -> AVX2 CPU -> SSE4.2 cpu-compat), "cuda", "vulkan", "cpu", or "cpu-compat"
+backend = "auto"
+
+# Default HTTP port for llama-server
+port = 8080
+
+# Folder scanned for .gguf models ("." scans the folder alpaca.exe lives in, plus models/ subfolder)
+models_dir = "."
+scan_depth = 3
+
+# Set true on legacy consoles without Unicode box-drawing glyphs
+ascii = false
+
+# Default sampling profile in chat: "coding", "precise", or "creative"
+active_profile = "coding"
+
+# Auto-compaction trigger threshold (percent of context window)
+compaction_threshold_pct = 80
+
+# Set true to disable alpaca's built-in TUI tool/MCP/skill system prompt
+disable_system_prompt = false
+
+# Ring terminal bell when a long generation finishes
+long_gen_bell = false
+
+# Optional extra GGUF paths outside models_dir
+# extra_models = ["E:\\Models\\example.gguf"]
+
+[web]
+# Optional web search provider: "brave", "tavily", "searxng", or "" (disabled)
+search_provider = ""
+# Prefer environment variable ALPACA_WEB_SEARCH_KEY rather than storing keys on a removable drive
+search_api_key = ""
+searxng_url = ""
+max_fetch_bytes = 524288

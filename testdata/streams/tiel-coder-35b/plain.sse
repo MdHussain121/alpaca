@@ -1,0 +1,32 @@
+data: {"choices":[{"finish_reason":null,"index":0,"delta":{"role":"assistant","content":null}}],"created":1794481635,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk"}
+
+data: {"choices":[{"finish_reason":null,"index":0,"delta":{"reasoning_content":"The"}}],"created":1794481635,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk"}
+
+data: {"choices":[{"finish_reason":null,"index":0,"delta":{"reasoning_content":" user"}}],"created":1794481635,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk"}
+
+data: {"choices":[{"finish_reason":null,"index":0,"delta":{"reasoning_content":" asks"}}],"created":1794481635,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk"}
+
+data: {"choices":[{"finish_reason":null,"index":0,"delta":{"reasoning_content":" for"}}],"created":1794481636,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk"}
+
+data: {"choices":[{"finish_reason":null,"index":0,"delta":{"reasoning_content":" exactly"}}],"created":1794481636,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk"}
+
+data: {"choices":[{"finish_reason":null,"index":0,"delta":{"reasoning_content":" one"}}],"created":1794481636,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk"}
+
+data: {"choices":[{"finish_reason":null,"index":0,"delta":{"reasoning_content":" word"}}],"created":1794481636,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk"}
+
+data: {"choices":[{"finish_reason":null,"index":0,"delta":{"reasoning_content":":"}}],"created":1794481636,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk"}
+
+data: {"choices":[{"finish_reason":null,"index":0,"delta":{"reasoning_content":" \""}}],"created":1794481636,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk"}
+
+data: {"choices":[{"finish_reason":null,"index":0,"delta":{"reasoning_content":"hello"}}],"created":1794481636,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk"}
+
+data: {"choices":[{"finish_reason":null,"index":0,"delta":{"reasoning_content":"\"."}}],"created":1794481637,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk"}
+
+data: {"choices":[{"finish_reason":null,"index":0,"delta":{"content":"hello"}}],"created":1794481637,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk"}
+
+data: {"choices":[{"finish_reason":"stop","index":0,"delta":{}}],"created":1794481637,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk"}
+
+data: {"choices":[],"created":1794481637,"id":"chatcmpl-SSuikVi5I4l99LtiIEksnwHwzMVrYXyy","model":"C:\\tmp\\llm-models\\Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf","system_fingerprint":"b1-9e9619d","object":"chat.completion.chunk","usage":{"completion_tokens":16,"prompt_tokens":197,"total_tokens":213,"prompt_tokens_details":{"cached_tokens":0}},"timings":{"cache_n":0,"prompt_n":197,"prompt_ms":20846.309,"prompt_per_token_ms":105.81882741116752,"prompt_per_second":9.450114166493455,"predicted_n":16,"predicted_ms":2257.132,"predicted_per_token_ms":150.47546666666668,"predicted_per_second":6.645601586438011}}
+
+data: [DONE]
+

@@ -1,0 +1,40 @@
+alpaca  ·  Demo-Coder-8B · http://127.0.0.1:8080/v1                                                                                                      READY 
+  READY    gen  — t/s                                                                                                                                           
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ TUI Chat  [tab: logs]                                                                                                                                        │
+│ ctx ░░░░░░░░░░ 0/8192 (0%)  gen — t/s  effort default  think on  prof:coding  perm:read-auto  ws:demo-ws                                                     │
+│ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│                                                                                                                                                              │
+│   TUI Chat ready — Demo-Coder-8B                                                                                                                             │
+│   Type a prompt below and press Enter, or /help for commands.                                                                                                │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│                                        ╭────────────────────────────────────────────────────────────────────────────╮                                        │
+│                                        │                                                                            │                                        │
+│                                        │  Command Palette  [ctrl+p]                                                 │                                        │
+│                                        │  › th                                                                      │                                        │
+│                                        │  ────────────────────────────────────────────────────────────────────────  │                                        │
+│                                        │  ▸ [cmd    ] /theme                   Switch UI color theme (or cycle wi…  │                                        │
+│                                        │    [cmd    ] /think                   Toggle thinking trace display or e…  │                                        │
+│                                        │    [setting] Cycle color theme        Current: mocha                       │                                        │
+│                                        │    [setting] Toggle thinking display  Show or collapse reasoning traces …  │                                        │
+│                                        │    [setting] Toggle Flash Attention   Flash attention KV optimization (n…  │                                        │
+│                                        │    [cmd    ] /log                     Switch to the llama-server log tab   │                                        │
+│                                        │    [cmd    ] /model                   Switch to another discovered GGUF …  │                                        │
+│                                        │    [setting] Toggle code line numbers Show line numbers in fenced code b…  │                                        │
+│                                        │    [model  ] Demo-Coder-8B            Switch model (Demo-Coder-8B.gguf)    │                                        │
+│                                        │    [cmd    ] /profile                 Switch active sampling profile (co…  │                                        │
+│                                        │  ↑↓ move · enter run · esc close                                           │                                        │
+│                                        │                                                                            │                                        │
+│                                        ╰────────────────────────────────────────────────────────────────────────────╯                                        │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│ › Type a message… (enter send · /effort <lvl> · /help)                                                                                                       │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+enter send · tab logs · ↑↓/pgup scroll · ctrl+e effort · ctrl+t thinking · ctrl+l clear · esc stop/back · ctrl+c quit

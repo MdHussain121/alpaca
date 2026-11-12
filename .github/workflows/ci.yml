@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Verify formatting
+        shell: pwsh
+        run: |
+          $unformatted = gofmt -l .
+          if ($unformatted) {
+            Write-Host "Unformatted Go files:`n$unformatted"
+            exit 1
+          }
+
+      - name: Run unit tests
+        shell: pwsh
+        env:
+          CGO_ENABLED: "0"
+        run: go test ./...
+
+      - name: Run go vet
+        shell: pwsh
+        env:
+          CGO_ENABLED: "0"
+        run: go vet ./...
+
+      - name: Cleanliness check
+        shell: pwsh
+        run: .\scripts\check-clean.ps1
+
+      - name: Build binary
+        shell: pwsh
+        env:
+          CGO_ENABLED: "0"
+        run: go build -trimpath -ldflags "-s -w" -o alpaca.exe ./cmd/alpaca

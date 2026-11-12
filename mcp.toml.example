@@ -1,0 +1,11 @@
+# alpaca MCP server configuration (stdio JSON-RPC 2.0)
+# Copy to mcp.toml next to alpaca.exe to connect external MCP servers.
+# Tools exposed by enabled servers appear as "<server>.<tool>" inside chat.
+
+# [servers.filesystem]
+# command = "npx"
+# args = ["-y", "@modelcontextprotocol/server-filesystem", "."]
+# enabled = true
+# timeout_s = 30
+# class = "exec"
+# disabled_tools = []

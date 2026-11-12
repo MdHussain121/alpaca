@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="alpaca logo light variant">
+  <rect x="8" y="8" width="240" height="240" rx="52" fill="#eff1f5" stroke="#ccd0da" stroke-width="6"/>
+  <path d="M58 224 L74 86 L88 36 L108 70 L130 36 L142 78 L160 86 L198 102 L200 130 L148 142 L132 172 L140 224 Z" fill="#8839ef"/>
+  <path d="M116 70 L129 46 L136 76 Z" fill="#1e66f5"/>
+  <path d="M178 106 L198 108 L199 125 L178 122 Z" fill="#1e66f5"/>
+  <path d="M64 178 L134 162 L137 182 L62 198 Z" fill="#1e66f5"/>
+  <circle cx="148" cy="104" r="9" fill="#eff1f5"/>
+  <rect x="164" y="206" width="40" height="16" rx="4" fill="#1e66f5"/>
+</svg>

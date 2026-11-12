@@ -1,0 +1,24 @@
+alpaca  ·  Demo-Coder-8B · http://127.0.0.1:8080/v1                      READY 
+  READY    gen  — t/s                                                           
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ T╭────────────────────────────────────────────────────────────────────────╮  │
+│ c│                                                                        │… │
+│ ─│  Command Palette  [ctrl+p]                                             │─ │
+│  │  › th                                                                  │  │
+│  │  ────────────────────────────────────────────────────────────────────  │  │
+│  │  ▸ [cmd    ] /theme                   Switch UI color theme (or cycl…  │  │
+│  │    [cmd    ] /think                   Toggle thinking trace display …  │  │
+│  │    [setting] Cycle color theme        Current: mocha                   │  │
+│  │    [setting] Toggle thinking display  Show or collapse reasoning tra…  │  │
+│  │    [setting] Toggle Flash Attention   Flash attention KV optimizatio…  │  │
+│  │    [cmd    ] /log                     Switch to the llama-server log…  │  │
+│  │    [cmd    ] /model                   Switch to another discovered G…  │  │
+│  │    [setting] Toggle code line numbers Show line numbers in fenced co…  │  │
+│  │    [model  ] Demo-Coder-8B            Switch model (Demo-Coder-8B.gg…  │  │
+│  │    [cmd    ] /profile                 Switch active sampling profile…  │  │
+│  │  ↑↓ move · enter run · esc close                                       │  │
+│  │                                                                        │  │
+│ ─╰────────────────────────────────────────────────────────────────────────╯─ │
+│ › Type a message… (enter send · /effort <lvl> · /help)                       │
+╰──────────────────────────────────────────────────────────────────────────────╯
+enter send · tab logs · ↑↓/pgup scroll · ctrl+e effort · ctrl+t thinking

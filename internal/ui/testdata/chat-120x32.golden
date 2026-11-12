@@ -1,0 +1,32 @@
+alpaca  ·  Demo-Coder-8B · http://127.0.0.1:8080/v1                                                              READY 
+  READY    gen  42.5 t/s                                                                                                
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ TUI Chat · ↑ 0%  [tab: logs]                                                                                         │
+│ ctx ██▌░░░░░░░ 2048/8192 (25%)  gen 42.5 t/s  effort default  think on  prof:coding  perm:read-auto  ws:demo-ws      │
+│ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│ You                                                                                                                  │
+│   Write a fast Go Fibonacci helper and explain complexity.                                                           │
+│                                                                                                                      │
+│ Assistant  42.5 t/s · 64 tok                                                                                         │
+│   ▾ Thought for 1.4s · 18 tok                                                                             [ctrl+t]   │
+│     │ Need iterative O(n) loop.                                                                                      │
+│     │ Avoid exponential recursion.                                                                                   │
+│   Iterative Go Implementation                                                                                        │
+│                                                                                                                      │
+│   Here is a constant-space version:                                                                                  │
+│                                                                                                                      │
+│   ╭─ go ──────────────────────────────────────────────────────────────────────────────────────────────── [c] copy ─╮ │
+│   │  1 │ package mathutil                                                                                          │ │
+│   │  2 │                                                                                                           │ │
+│   │  3 │ // Fib returns the n-th Fibonacci number in O(n) time and O(1) space.                                     │ │
+│   │  4 │ func Fib(n int) int {                                                                                     │ │
+│   │  5 │     if n < 2 {                                                                                            │ │
+│   │  6 │         return n                                                                                          │ │
+│   │  7 │     }                                                                                                     │ │
+│   │  8 │     a, b := 0, 1                                                                                          │ │
+│   │  9 │     for i := 2; i <= n; i++ {                                                                             │ │
+│   │ 10 │         a, b = b, a+b                                                                                     │ │
+│ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│ › Type a message… (enter send · /effort <lvl> · /help)                                                               │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+enter send · tab logs · ↑↓/pgup scroll · ctrl+e effort · ctrl+t thinking · ctrl+l clear · esc stop/back · ctrl+c quit

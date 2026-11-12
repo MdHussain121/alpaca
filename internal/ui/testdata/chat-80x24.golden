@@ -1,0 +1,24 @@
+alpaca  ·  Demo-Coder-8B · http://127.0.0.1:8080/v1                      READY 
+  READY    gen  42.5 t/s                                                        
+╭──────────────────────────────────────────────────────────────────────────────╮
+│ TUI Chat · ↑ 0%  [tab: logs]                                                 │
+│ ctx ██▌░░░░░░░ 2048/8192 (25%)  gen 42.5 t/s  effort default  think on  pro… │
+│ ──────────────────────────────────────────────────────────────────────────── │
+│ You                                                                          │
+│   Write a fast Go Fibonacci helper and explain complexity.                   │
+│                                                                              │
+│ Assistant  42.5 t/s · 64 tok                                                 │
+│   ▾ Thought for 1.4s · 18 tok                                     [ctrl+t]   │
+│     │ Need iterative O(n) loop.                                              │
+│     │ Avoid exponential recursion.                                           │
+│   Iterative Go Implementation                                                │
+│                                                                              │
+│   Here is a constant-space version:                                          │
+│                                                                              │
+│   ╭─ go ──────────────────────────────────────────────────────── [c] copy ─╮ │
+│   │  1 │ package mathutil                                                  │ │
+│   │  2 │                                                                   │ │
+│ ──────────────────────────────────────────────────────────────────────────── │
+│ › Type a message… (enter send · /effort <lvl> · /help)                       │
+╰──────────────────────────────────────────────────────────────────────────────╯
+enter send · tab logs · ↑↓/pgup scroll · ctrl+e effort · ctrl+t thinking
