@@ -1,183 +1,208 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 590" width="960" height="590" role="img" aria-label="alpaca launcher terminal screenshot">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 640" width="1020" height="640" role="img" aria-label="alpaca launcher terminal UI">
   <defs>
     <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
-      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.55"/>
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#000000" flood-opacity="0.6"/>
     </filter>
-    <linearGradient id="headerGrad" x1="0" y1="0" x2="1" y2="0">
+    <linearGradient id="bannerGrad1" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#cba6f7"/>
       <stop offset="100%" stop-color="#89b4fa"/>
-    </linearGradient>
-    <linearGradient id="vramGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#a6e3a1"/>
-      <stop offset="100%" stop-color="#94e2d5"/>
-    </linearGradient>
-    <linearGradient id="ramGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#89b4fa"/>
-      <stop offset="100%" stop-color="#b4befe"/>
     </linearGradient>
   </defs>
 
   <style>
-    .mono { font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace; }
-    .title { font-size: 13px; font-weight: 600; fill: #a6adc8; }
-    .txt-primary { fill: #cdd6f4; font-size: 13px; }
-    .txt-muted { fill: #6c7086; font-size: 12px; }
-    .txt-dim { fill: #45475a; font-size: 12px; }
-    .txt-accent { fill: #cba6f7; font-size: 13px; font-weight: 600; }
-    .txt-blue { fill: #89b4fa; font-size: 13px; }
-    .txt-cyan { fill: #94e2d5; font-size: 13px; }
-    .txt-green { fill: #a6e3a1; font-size: 13px; }
-    .txt-yellow { fill: #f9e2af; font-size: 13px; }
-    .txt-gold { fill: #fab387; font-weight: 600; font-size: 12px; }
-    .txt-silver { fill: #bac2de; font-weight: 600; font-size: 12px; }
-    .txt-bronze { fill: #eba0ac; font-weight: 600; font-size: 12px; }
-    .badge { font-size: 11px; font-weight: 700; }
+    .mono { font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 13px; line-height: 1.4; }
+    .title-left { fill: #cdd6f4; font-weight: 700; font-size: 13px; }
+    .badge-cuda { fill: #a6e3a1; font-weight: 700; font-size: 12px; }
+    .border { fill: #45475a; }
+    .panel-title { fill: #cba6f7; font-weight: 700; font-size: 13px; }
+    .panel-title-dim { fill: #6c7086; font-weight: 600; font-size: 13px; }
+    .txt-text { fill: #cdd6f4; }
+    .txt-muted { fill: #6c7086; }
+    .txt-accent { fill: #cba6f7; font-weight: 600; }
+    .txt-cyan { fill: #94e2d5; }
+    .txt-green { fill: #a6e3a1; font-weight: 600; }
+    .txt-yellow { fill: #f9e2af; font-weight: 600; }
+    .txt-blue { fill: #89b4fa; }
+    .txt-gold { fill: #fab387; font-weight: 700; }
+    .gauge-fill { fill: #a6e3a1; }
+    .gauge-empty { fill: #313244; }
   </style>
 
-  <!-- Background window with drop shadow -->
-  <rect x="20" y="16" width="920" height="554" rx="14" fill="#181825" stroke="#313244" stroke-width="1.5" filter="url(#shadow)"/>
+  <!-- Terminal Window Chrome -->
+  <rect x="20" y="16" width="980" height="606" rx="14" fill="#1e1e2e" stroke="#313244" stroke-width="1.5" filter="url(#shadow)"/>
 
-  <!-- Window title bar -->
-  <path d="M 20 30 Q 20 16 34 16 L 926 16 Q 940 16 940 30 L 940 48 L 20 48 Z" fill="#1e1e2e"/>
-  <line x1="20" y1="48" x2="940" y2="48" stroke="#313244" stroke-width="1"/>
+  <!-- Title bar -->
+  <path d="M 20 30 Q 20 16 34 16 L 986 16 Q 1000 16 1000 30 L 1000 48 L 20 48 Z" fill="#181825"/>
+  <line x1="20" y1="48" x2="1000" y2="48" stroke="#313244" stroke-width="1"/>
 
-  <!-- Window controls -->
+  <!-- Traffic light buttons -->
   <circle cx="42" cy="32" r="6" fill="#f38ba8"/>
   <circle cx="62" cy="32" r="6" fill="#f9e2af"/>
   <circle cx="82" cy="32" r="6" fill="#a6e3a1"/>
 
-  <text class="mono title" x="480" y="36" text-anchor="middle">alpaca v1.0.1 — Local Coding Agent &amp; Model Launcher</text>
+  <!-- Window title -->
+  <text class="mono title-left" x="110" y="36">alpaca  ·  portable model launcher</text>
+  <text class="mono badge-cuda" x="976" y="36" text-anchor="end">● CUDA · RTX 4060 Laptop GPU 8.0 GB</text>
 
-  <!-- Terminal content area -->
-  <g transform="translate(44, 66)">
-    <!-- Header banner & brand -->
-    <text class="mono" font-size="12" fill="url(#headerGrad)" font-weight="700">
-      <tspan x="0" y="12">  ╭─╮╭─╮    ▄▀█ █   █▀█ ▄▀█ █▀▀ ▄▀█</tspan>
-      <tspan x="0" y="26">  │ •  ╰─╮  █▀█ █▄▄ █▀▀ █▀█ █▄▄ █▀█</tspan>
-      <tspan x="0" y="40">  │ ═══╭─╯  portable AI agent · llama.cpp</tspan>
+  <!-- Terminal Body Content -->
+  <g transform="translate(36, 60)">
+
+    <!-- ASCII Brand Banner -->
+    <text class="mono" font-size="12" font-weight="700">
+      <tspan x="10" y="14" fill="#cba6f7">  ╭─╮╭─╮    ▄▀█ █   █▀█ ▄▀█ █▀▀ ▄▀█</tspan>
+      <tspan x="10" y="28" fill="#89b4fa">  │ •  ╰─╮  █▀█ █▄▄ █▀▀ █▀█ █▄▄ █▀█</tspan>
+      <tspan x="10" y="42" fill="#6c7086">  │ ═══╭─╯  portable launcher · llama.cpp</tspan>
     </text>
 
-    <!-- Hardware spec pill -->
-    <rect x="360" y="4" width="512" height="40" rx="8" fill="#1e1e2e" stroke="#313244" stroke-width="1"/>
-    <text class="mono txt-muted" x="374" y="22">GPU: <tspan class="txt-primary" font-weight="600">NVIDIA GeForce RTX 4060 Laptop GPU (8.0 GB)</tspan></text>
-    <text class="mono txt-muted" x="374" y="37">RAM: <tspan class="txt-primary">15.7 GB</tspan> · CPU: <tspan class="txt-primary">10 cores (AVX2)</tspan> · Backend: <tspan class="txt-green" font-weight="600">CUDA 13.2</tspan></text>
+    <!-- TOP SECTION: Models (Left) and Settings (Right) -->
 
-    <!-- Divider -->
-    <line x1="0" y1="58" x2="872" y2="58" stroke="#313244" stroke-width="1"/>
+    <!-- Models Panel (Focused) -->
+    <g transform="translate(0, 52)">
+      <rect x="0" y="0" width="370" height="280" rx="8" fill="#181825" stroke="#cba6f7" stroke-width="1.5"/>
+      <text class="mono panel-title" x="16" y="22">Models</text>
+      <text class="mono txt-muted" x="354" y="22" text-anchor="end">4 model(s)</text>
 
-    <!-- Model Table Header -->
-    <text class="mono txt-muted" font-size="11" font-weight="600" x="0" y="74">
-      <tspan x="18">MODEL NAME</tspan>
-      <tspan x="360">SIZE</tspan>
-      <tspan x="430">QUANT</tspan>
-      <tspan x="510">MEMORY FIT</tspan>
-      <tspan x="710">TOOL RATING</tspan>
-    </text>
+      <!-- Model 1 (Active Cursor) -->
+      <g transform="translate(16, 42)">
+        <text class="mono txt-accent" font-weight="700" x="0" y="0">▸ Qwen3.5-4B-3D-Coder-Q4_K_M</text>
+        <text class="mono txt-muted" font-size="11" x="14" y="15">Q4_K_M · 4.0B · 36L · qwen3 · <tspan class="txt-gold">Gold ★★★</tspan></text>
+      </g>
 
-    <!-- Row 1 (Selected) -->
-    <rect x="0" y="82" width="872" height="28" rx="6" fill="#313244" stroke="#cba6f7" stroke-width="1"/>
-    <circle cx="10" cy="96" r="3" fill="#cba6f7"/>
-    <text class="mono txt-accent" x="22" y="100">Qwen3.5-4B-3D-Coder-Q4_K_M.gguf</text>
-    <text class="mono txt-primary" x="360" y="100">2.7 GB</text>
-    <text class="mono txt-cyan" x="430" y="100">Q4_K_M</text>
-    <text class="mono txt-green" x="510" y="100">CUDA 100% (2.9 GB)</text>
-    <rect x="710" y="88" width="88" height="17" rx="4" fill="#fab387" fill-opacity="0.2"/>
-    <text class="mono txt-gold badge" x="720" y="100">★ Gold 100%</text>
+      <!-- Model 2 -->
+      <g transform="translate(16, 82)">
+        <text class="mono txt-text" x="0" y="0">  Spark-X2.6-4B-abliterated-Q4_K_M</text>
+        <text class="mono txt-muted" font-size="11" x="14" y="15">Q4_K_M · 4.0B · 36L · llama · Silver ★★</text>
+      </g>
 
-    <!-- Row 2 -->
-    <circle cx="10" cy="122" r="3" fill="#45475a"/>
-    <text class="mono txt-primary" x="22" y="126">Spark-X2.6-4B-abliterated-Q4_K_M.gguf</text>
-    <text class="mono txt-muted" x="360" y="126">2.6 GB</text>
-    <text class="mono txt-cyan" x="430" y="126">Q4_K_M</text>
-    <text class="mono txt-green" x="510" y="126">CUDA 100% (2.8 GB)</text>
-    <rect x="710" y="114" width="94" height="17" rx="4" fill="#bac2de" fill-opacity="0.2"/>
-    <text class="mono txt-silver badge" x="718" y="126">★ Silver 88%</text>
+      <!-- Model 3 -->
+      <g transform="translate(16, 122)">
+        <text class="mono txt-text" x="0" y="0">  LFM2.5-8B-A1B-Q4_0</text>
+        <text class="mono txt-muted" font-size="11" x="14" y="15">Q4_0 · 8.0B · 36L · lfm · Bronze ★</text>
+      </g>
 
-    <!-- Row 3 -->
-    <circle cx="10" cy="148" r="3" fill="#45475a"/>
-    <text class="mono txt-primary" x="22" y="152">LFM2.5-8B-A1B-Q4_0.gguf</text>
-    <text class="mono txt-muted" x="360" y="152">4.8 GB</text>
-    <text class="mono txt-cyan" x="430" y="152">Q4_0</text>
-    <text class="mono txt-green" x="510" y="152">CUDA 100% (5.2 GB)</text>
-    <rect x="710" y="140" width="96" height="17" rx="4" fill="#eba0ac" fill-opacity="0.2"/>
-    <text class="mono txt-bronze badge" x="718" y="152">★ Bronze 75%</text>
+      <!-- Model 4 -->
+      <g transform="translate(16, 162)">
+        <text class="mono txt-text" x="0" y="0">  Tiel-Coder-35B-A3B-UD-IQ4_XS</text>
+        <text class="mono txt-muted" font-size="11" x="14" y="15">IQ4_XS · 35.0B · 64L · MoE · <tspan class="txt-gold">Gold ★★★</tspan></text>
+      </g>
 
-    <!-- Row 4 -->
-    <circle cx="10" cy="174" r="3" fill="#45475a"/>
-    <text class="mono txt-primary" x="22" y="178">Tiel-Coder-35B-A3B-UD-IQ4_XS.gguf</text>
-    <text class="mono txt-muted" x="360" y="178">17.7 GB</text>
-    <text class="mono txt-cyan" x="430" y="178">IQ4_XS</text>
-    <text class="mono txt-yellow" x="510" y="178">Partial (8.0G GPU + 11.2G CPU)</text>
-    <rect x="710" y="166" width="88" height="17" rx="4" fill="#fab387" fill-opacity="0.2"/>
-    <text class="mono txt-gold badge" x="720" y="178">★ Gold 96%</text>
-
-    <!-- Divider -->
-    <line x1="0" y1="198" x2="872" y2="198" stroke="#313244" stroke-width="1"/>
-
-    <!-- Hardware Estimator Panel -->
-    <rect x="0" y="210" width="872" height="152" rx="10" fill="#1e1e2e" stroke="#313244" stroke-width="1"/>
-
-    <text class="mono txt-accent" font-weight="700" x="18" y="232">ESTIMATED RESOURCE USAGE &amp; HARDWARE FIT</text>
-    <text class="mono txt-muted" x="730" y="232">Status: <tspan class="txt-green" font-weight="700">OPTIMAL</tspan></text>
-
-    <!-- VRAM Gauge -->
-    <text class="mono txt-muted" x="18" y="258">VRAM Usage :</text>
-    <g transform="translate(130, 246)">
-      <rect x="0" y="0" width="460" height="14" rx="4" fill="#313244"/>
-      <rect x="0" y="0" width="168" height="14" rx="4" fill="url(#vramGrad)"/>
+      <text class="mono txt-muted" font-size="11" x="16" y="260">↑↓ select · enter launch · / filter</text>
     </g>
-    <text class="mono txt-primary" font-weight="600" x="606" y="258">2.9 / 8.0 GB <tspan class="txt-green">(100% offload · layer 33/33)</tspan></text>
 
-    <!-- RAM Gauge -->
-    <text class="mono txt-muted" x="18" y="284">System RAM :</text>
-    <g transform="translate(130, 272)">
-      <rect x="0" y="0" width="460" height="14" rx="4" fill="#313244"/>
-      <rect x="0" y="0" width="120" height="14" rx="4" fill="url(#ramGrad)"/>
+    <!-- Settings Panel (Right) -->
+    <g transform="translate(382, 52)">
+      <rect x="0" y="0" width="566" height="280" rx="8" fill="#181825" stroke="#313244" stroke-width="1.5"/>
+      <text class="mono panel-title-dim" x="16" y="22">Settings</text>
+      <text class="mono txt-muted" x="550" y="22" text-anchor="end">tab to focus</text>
+
+      <!-- Setting Rows -->
+      <g transform="translate(16, 40)" class="mono">
+        <!-- Context Slider -->
+        <text x="0" y="0" class="txt-text">  Context         </text>
+        <text x="140" y="0" class="txt-accent">━━━●──────</text>
+        <text x="240" y="0" class="txt-accent" font-weight="700">32K</text>
+        <text x="320" y="0" class="txt-muted">(KV: 512 MiB)</text>
+
+        <!-- K Cache -->
+        <text x="0" y="20" class="txt-text">  K cache         </text>
+        <text x="140" y="20" class="txt-text">q8_0</text>
+        <text x="240" y="20" class="txt-muted">auto: q8_0/q8_0 (7.1G free)</text>
+
+        <!-- V Cache -->
+        <text x="0" y="40" class="txt-text">  V cache         </text>
+        <text x="140" y="40" class="txt-text">q8_0</text>
+        <text x="240" y="40" class="txt-cyan">forces flash attn</text>
+
+        <!-- Flash Attention -->
+        <text x="0" y="60" class="txt-text">  Flash attn      </text>
+        <text x="140" y="60" class="txt-green">ON</text>
+        <text x="240" y="60" class="txt-muted">(required for context &gt;8K)</text>
+
+        <!-- GPU Layers Slider -->
+        <text x="0" y="80" class="txt-text">  GPU layers      </text>
+        <text x="140" y="80" class="txt-accent">━━━━━━━━━●</text>
+        <text x="240" y="80" class="txt-green" font-weight="700">all (36)</text>
+        <text x="320" y="80" class="txt-muted">100% offload</text>
+
+        <!-- KV Offload -->
+        <text x="0" y="100" class="txt-text">  KV offload      </text>
+        <text x="140" y="100" class="txt-green">on</text>
+        <text x="240" y="100" class="txt-muted">KV stored in VRAM</text>
+
+        <!-- Auto fit -->
+        <text x="0" y="120" class="txt-text">  Auto fit        </text>
+        <text x="140" y="120" class="txt-green">on</text>
+        <text x="240" y="120" class="txt-muted">calculates optimal context</text>
+
+        <!-- Auto KV -->
+        <text x="0" y="140" class="txt-text">  Auto KV         </text>
+        <text x="140" y="140" class="txt-text">on (q8_0/q8_0)</text>
+        <text x="240" y="140" class="txt-muted">balanced speed &amp; quality</text>
+
+        <!-- Load mode -->
+        <text x="0" y="160" class="txt-text">  Load mode       </text>
+        <text x="140" y="160" class="txt-cyan">auto (none)</text>
+        <text x="240" y="160" class="txt-muted">safe GPU fit, direct alloc</text>
+
+        <!-- Warmup -->
+        <text x="0" y="180" class="txt-text">  Warmup          </text>
+        <text x="140" y="180" class="txt-green">on</text>
+        <text x="240" y="180" class="txt-muted">prewarms CUDA kernels</text>
+
+        <!-- Threads Slider -->
+        <text x="0" y="200" class="txt-text">  Threads         </text>
+        <text x="140" y="200" class="txt-accent">●─────────</text>
+        <text x="240" y="200" class="txt-text">auto (10)</text>
+        <text x="320" y="200" class="txt-muted">optimal core affinity</text>
+      </g>
+
+      <line x1="16" y1="248" x2="550" y2="248" stroke="#313244" stroke-width="1"/>
+      <text class="mono txt-muted" font-size="11" x="16" y="266">tab panels · ←→ slide · enter edit · t theme · 1/34</text>
     </g>
-    <text class="mono txt-primary" font-weight="600" x="606" y="284">4.1 / 15.7 GB <tspan class="txt-muted">(System headroom: 11.6 GB free)</tspan></text>
 
-    <!-- Context Length Slider -->
-    <text class="mono txt-muted" x="18" y="310">Context Win :</text>
-    <g transform="translate(130, 303)">
-      <line x1="0" y1="5" x2="460" y2="5" stroke="#45475a" stroke-width="3" stroke-linecap="round"/>
-      <line x1="0" y1="5" x2="115" y2="5" stroke="#cba6f7" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="115" cy="5" r="7" fill="#cba6f7" stroke="#1e1e2e" stroke-width="2"/>
+    <!-- MIDDLE SECTION: Memory Panel -->
+    <g transform="translate(0, 342)">
+      <rect x="0" y="0" width="948" height="84" rx="8" fill="#181825" stroke="#313244" stroke-width="1.5"/>
+      <text class="mono panel-title-dim" x="16" y="20">Memory</text>
+
+      <!-- VRAM and RAM gauges -->
+      <g transform="translate(16, 42)" class="mono">
+        <text x="0" y="0" class="txt-muted">VRAM </text>
+        <text x="46" y="0" class="txt-green">█████████████████████▎</text><text x="230" y="0" class="gauge-empty">░░░░░░░░</text>
+        <text x="306" y="0" class="txt-text" font-weight="700">2.9/8.0 GB</text>
+
+        <text x="440" y="0" class="txt-muted">RAM </text>
+        <text x="480" y="0" class="txt-blue">████████</text><text x="550" y="0" class="gauge-empty">░░░░░░░░░░░░░░░░░░░░</text>
+        <text x="730" y="0" class="txt-text" font-weight="700">4.1/15.7 GB</text>
+      </g>
+
+      <text class="mono txt-muted" font-size="11" x="16" y="68">  weights 2.4G GPU · KV 0.5G GPU · comp 0.4G GPU · compute buffer estimated</text>
     </g>
-    <text class="mono txt-accent" font-weight="600" x="606" y="310">32,768 <tspan class="txt-muted">/ 131,072 tokens (KV: 512 MiB)</tspan></text>
 
-    <!-- Toggles / Flags -->
-    <text class="mono txt-muted" x="18" y="342">KV Cache: <tspan class="txt-primary">q8_0 / q8_0</tspan>  │  Flash Attention: <tspan class="txt-green">ON</tspan>  │  Auto-Fit: <tspan class="txt-green">ON</tspan>  │  Batch: <tspan class="txt-primary">2048 / 512</tspan>  │  Profile: <tspan class="txt-cyan">coding</tspan></text>
+    <!-- BOTTOM SECTION: Command Box -->
+    <g transform="translate(0, 436)">
+      <rect x="0" y="0" width="948" height="66" rx="8" fill="#181825" stroke="#313244" stroke-width="1.5"/>
+      <text class="mono panel-title-dim" x="16" y="20">Command</text>
+      <text class="mono txt-muted" font-size="12" x="16" y="44">llama-server -m models\Qwen3.5-4B-3D-Coder-Q4_K_M.gguf -c 32768 -ngl 36 -fa on -ctk q8_0 -ctv q8_0 --port 8080 --jinja</text>
+    </g>
 
-    <!-- Agent Workspace Status Bar -->
-    <rect x="0" y="374" width="872" height="34" rx="8" fill="#1e1e2e" stroke="#313244" stroke-width="1"/>
-    <text class="mono" font-size="12" x="16" y="396">
-      <tspan class="txt-muted">Workspace:</tspan> <tspan class="txt-primary">.\alpaca\workspace</tspan>
-      <tspan class="txt-dim">  │  </tspan>
-      <tspan class="txt-muted">Skills:</tspan> <tspan class="txt-cyan">4 active</tspan>
-      <tspan class="txt-dim">  │  </tspan>
-      <tspan class="txt-muted">MCP:</tspan> <tspan class="txt-green">2 connected</tspan>
-      <tspan class="txt-dim">  │  </tspan>
-      <tspan class="txt-muted">Web Search:</tspan> <tspan class="txt-green">Enabled</tspan>
-      <tspan class="txt-dim">  │  </tspan>
-      <tspan class="txt-muted">System Prompt:</tspan> <tspan class="txt-accent">Auto-injected</tspan>
-    </text>
-
-    <!-- Hotkeys footer -->
-    <g transform="translate(0, 424)">
-      <rect x="0" y="0" width="872" height="36" rx="6" fill="#181825" stroke="#313244" stroke-width="1"/>
-      <text class="mono" font-size="11" x="16" y="23">
-        <tspan class="txt-accent" font-weight="700">[Enter]</tspan> <tspan class="txt-primary">Launch Chat</tspan>
-        <tspan class="txt-dim">   </tspan>
-        <tspan class="txt-accent" font-weight="700">[b]</tspan> <tspan class="txt-primary">Backend (CUDA)</tspan>
-        <tspan class="txt-dim">   </tspan>
-        <tspan class="txt-accent" font-weight="700">[t]</tspan> <tspan class="txt-primary">Theme (mocha)</tspan>
-        <tspan class="txt-dim">   </tspan>
-        <tspan class="txt-accent" font-weight="700">[e]</tspan> <tspan class="txt-primary">Settings</tspan>
-        <tspan class="txt-dim">   </tspan>
-        <tspan class="txt-accent" font-weight="700">[/]</tspan> <tspan class="txt-primary">Filter</tspan>
-        <tspan class="txt-dim">   </tspan>
-        <tspan class="txt-accent" font-weight="700">[q]</tspan> <tspan class="txt-primary">Quit</tspan>
+    <!-- FOOTER: Help Shortcuts Bar -->
+    <g transform="translate(0, 516)">
+      <text class="mono txt-muted" font-size="11" x="0" y="14">
+        <tspan class="txt-accent" font-weight="700">↑↓</tspan> model · 
+        <tspan class="txt-accent" font-weight="700">tab</tspan> settings · 
+        <tspan class="txt-accent" font-weight="700">enter</tspan> launch · 
+        <tspan class="txt-accent" font-weight="700">/</tspan> filter · 
+        <tspan class="txt-accent" font-weight="700">o</tspan> path · 
+        <tspan class="txt-accent" font-weight="700">p</tspan> presets · 
+        <tspan class="txt-accent" font-weight="700">s</tspan> save · 
+        <tspan class="txt-accent" font-weight="700">c</tspan> copy · 
+        <tspan class="txt-accent" font-weight="700">C</tspan> local · 
+        <tspan class="txt-accent" font-weight="700">t</tspan> theme · 
+        <tspan class="txt-accent" font-weight="700">?</tspan> help · 
+        <tspan class="txt-accent" font-weight="700">q</tspan> quit
       </text>
     </g>
+
   </g>
 </svg>
