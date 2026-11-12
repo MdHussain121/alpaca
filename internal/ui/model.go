@@ -116,6 +116,7 @@ type Model struct {
 	launchDriveKind string
 	launchETA       time.Duration
 	launchAt        time.Time
+	launchRetried   bool
 
 	copying      bool
 	copyTitle    string
@@ -951,6 +952,7 @@ func (m *Model) updateInner(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.status == "LOADING" {
 				m.status = "READY"
 				m.statusDe = ""
+				m.launchRetried = false
 				m.refreshChatView(false)
 				cmds := []tea.Cmd{fetchPropsCmd(m.effectivePort(), m.chatBaseURL)}
 				if m.proc != nil && m.proc.PID() > 0 {
@@ -1026,6 +1028,7 @@ func (m *Model) updateInner(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.metrics = runner.Metrics{}
 			m.telemetry = runner.Telemetry{}
 			m.logView.SetContent("")
+			m.launchRetried = false
 			return m.launch()
 		case "back":
 			m.screen = screenLauncher
@@ -1068,16 +1071,35 @@ func (m *Model) updateInner(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.status == "STOPPING" || m.status == "STOPPED" {
 			return m, nil
 		}
+		// One automatic retry: some model chat templates raise a Jinja
+		// exception on --reasoning-effort values they do not support
+		// ("Unexpected reasoning effort max. Supported types are high and
+		// low."), which kills the server before it becomes ready. Relaunch
+		// once with the effort flag dropped to the template default instead
+		// of leaving the user with a dead server.
+		if m.status == "LOADING" && !m.launchRetried &&
+			m.settings.ReasoningEffort != "" && m.settings.ReasoningEffort != "default" &&
+			effortRejectedByTemplate(m.logs) {
+			m.launchRetried = true
+			rejected := m.settings.ReasoningEffort
+			m.settings.ReasoningEffort = "default"
+			m.proc = nil
+			m.activePort = 0
+			m.telemetryPending = false
+			m.toastf("model template rejected --reasoning-effort %s — retrying with the template default", rejected)
+			return m.launch()
+		}
 		// A server that dies must never leave the screen claiming READY.
 		m.status = "ERROR"
 		m.statusDe = "llama-server exited"
 		if msg.err != nil {
 			m.statusDe = msg.err.Error()
 		}
-		if len(m.logs) > 0 {
-			if last := strings.TrimSpace(m.logs[len(m.logs)-1]); last != "" {
-				m.statusDe = "llama-server exited: " + last
-			}
+		if reason := startupReason(m.logs); reason != "" {
+			m.statusDe = "llama-server exited: " + reason
+		}
+		if effortRejectedByTemplate(m.logs) {
+			m.statusDe += " — set Reasoning effort to a supported level (ctrl+e) or check the log"
 		}
 		m.refreshChatView(false)
 		return m, nil
@@ -1489,6 +1511,7 @@ func (m *Model) updateLauncher(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		}
+		m.launchRetried = false
 		return m.launch()
 
 	case "/":
@@ -1740,6 +1763,7 @@ func (m *Model) updateRun(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.metrics = runner.Metrics{}
 		m.telemetry = runner.Telemetry{}
 		m.logView.SetContent("")
+		m.launchRetried = false
 		return m.launch()
 	case "ctrl+e":
 		m.cycleReasoningEffortLive()
@@ -1800,6 +1824,40 @@ func readLogBatchCmd(p *runner.Process) tea.Cmd {
 		}
 		return logBatchMsg(batch)
 	}
+}
+
+// startupReason picks the most informative log line for a server that died
+// before becoming ready. llama.cpp prints a generic fatal line last ("exiting
+// due to model loading error"), so the actionable error sits above it in the
+// log; prefer chat-template and Jinja failures, then fall back to the tail.
+func startupReason(logs []string) string {
+	for i := len(logs) - 1; i >= 0; i-- {
+		l := strings.ToLower(logs[i])
+		if strings.Contains(l, "reasoning effort") || strings.Contains(l, "reasoning_effort") ||
+			strings.Contains(l, "chat template parsing error") || strings.Contains(l, "jinja exception") {
+			return strings.TrimSpace(logs[i])
+		}
+	}
+	for i := len(logs) - 1; i >= 0; i-- {
+		if s := strings.TrimSpace(logs[i]); s != "" {
+			return s
+		}
+	}
+	return ""
+}
+
+// effortRejectedByTemplate reports whether the log shows a model chat template
+// that raised a Jinja exception over the --reasoning-effort value. Such
+// templates (e.g. reasoning models accepting only high/low) kill the server
+// before it becomes ready; the fix is to relaunch without the flag.
+func effortRejectedByTemplate(logs []string) bool {
+	for i := len(logs) - 1; i >= 0; i-- {
+		l := strings.ToLower(logs[i])
+		if strings.Contains(l, "reasoning effort") || strings.Contains(l, "reasoning_effort") {
+			return true
+		}
+	}
+	return false
 }
 
 func waitHealthCmd(ctx context.Context, p *runner.Process, timeout time.Duration) tea.Cmd {
