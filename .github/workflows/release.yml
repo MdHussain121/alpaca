@@ -104,8 +104,15 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
           $tag = $env:GITHUB_REF_NAME
-          gh release view $tag 2>$null
+          $view = gh release view $tag --json assets 2>$null
           if ($LASTEXITCODE -eq 0) {
+            $existing = $view | ConvertFrom-Json
+            if ($existing.assets.Count -gt 0) {
+              # A release that already carries assets (e.g. locally packaged
+              # bundles) is never overwritten by a tag re-push.
+              Write-Host "Release $tag already has $($existing.assets.Count) asset(s); leaving it untouched."
+              exit 0
+            }
             gh release edit $tag --title "alpaca $tag" --notes-file .\release-notes.md
             gh release upload $tag .\alpaca.exe .\SHA256SUMS.txt --clobber
           } else {
