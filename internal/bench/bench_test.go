@@ -1,4 +1,4 @@
-﻿package bench
+package bench
 
 import (
 	"os"
@@ -66,4 +66,3 @@ func TestNeedlePromptContainsSecret(t *testing.T) {
 		t.Fatalf("needle prompt missing secret")
 	}
 }
-

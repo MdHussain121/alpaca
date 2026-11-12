@@ -1,4 +1,4 @@
-﻿package bench
+package bench
 
 import (
 	"context"
@@ -864,4 +864,3 @@ func buildNeedlePrompt(targetTokens int, secret string) string {
 	b.WriteString("\n\nQuestion: What is the exact 6-digit CRITICAL VERIFICATION CODE stated in the log above? Reply with only the 6-digit number.")
 	return b.String()
 }
-

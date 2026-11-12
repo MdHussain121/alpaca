@@ -1,4 +1,4 @@
-﻿package bench
+package bench
 
 import (
 	"bytes"
@@ -253,4 +253,3 @@ func formatFloatCSV(v float64) string {
 func trimBOM(b []byte) []byte {
 	return bytes.TrimPrefix(b, []byte{0xEF, 0xBB, 0xBF})
 }
-
