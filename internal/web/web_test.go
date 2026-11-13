@@ -9,8 +9,6 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-
-	"github.com/MdHussain121/alpaca/internal/config"
 )
 
 type fakeResolver map[string][]string
@@ -218,24 +216,7 @@ func TestFetchHTMLReadabilityBinaryRefusal2MBCapAndUntrustedDelimiters(t *testin
 	}
 }
 
-func TestSearchProvidersConfigAndSecretRedaction(t *testing.T) {
-	// 1. Unconfigured returns helpful reason and nil provider
-	t.Setenv("BRAVE_API_KEY", "")
-	t.Setenv("TAVILY_API_KEY", "")
-	t.Setenv("ALPACA_WEB_SEARCH_KEY", "")
-	t.Setenv("LLM_WEB_SEARCH_KEY", "")
-	t.Setenv("ALPACA_WEB_SEARCH_PROVIDER", "")
-	t.Setenv("LLM_WEB_SEARCH_PROVIDER", "")
-	t.Setenv("SEARXNG_URL", "")
-	t.Setenv("ALPACA_SEARXNG_URL", "")
-	t.Setenv("LLM_SEARXNG_URL", "")
-
-	prov, reason := ResolveSearchProvider(SearchConfigOptions{})
-	if prov != nil || reason == "" {
-		t.Fatalf("expected nil provider with reason when unconfigured, got prov=%v reason=%q", prov, reason)
-	}
-
-	// 2. SearXNG against local test server
+func TestSearXNGChainAndSecretRedaction(t *testing.T) {
 	searxSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/search" || r.URL.Query().Get("format") != "json" {
 			http.Error(w, "bad req", 400)
@@ -245,34 +226,19 @@ func TestSearchProvidersConfigAndSecretRedaction(t *testing.T) {
 	}))
 	defer searxSrv.Close()
 
-	sProv, errReason := ResolveSearchProvider(SearchConfigOptions{
-		Web: config.WebConfig{SearXNGURL: searxSrv.URL},
+	chain := NewKeylessChain(ChainOptions{
+		Backends:   []Searcher{&searxSearcher{base: searxSrv.URL, opts: ClientOptions{AllowLoopbackForTest: true}}},
+		ClientOpts: ClientOptions{AllowLoopbackForTest: true},
+		Cache:      NewCache(t.TempDir(), SearchCacheTTL),
 	})
-	if sProv == nil {
-		t.Fatalf("expected searxng provider, got reason=%q", errReason)
-	}
-	results, err := sProv.Search(context.Background(), "golang", 1)
-	if err != nil || len(results) != 1 || results[0].Title != "Go Blog" {
-		t.Fatalf("searxng results mismatch: results=%+v err=%v", results, err)
+	report := chain.Search(context.Background(), "golang", 1)
+	if report.Err != nil || len(report.Results) != 1 || report.Results[0].Title != "Go Blog" {
+		t.Fatalf("searxng results mismatch: results=%+v err=%v", report.Results, report.Err)
 	}
 
-	// 3. Brave provider secret redaction on HTTP error
 	secretKey := "BSA-SUPER-SECRET-TOKEN-123456"
-	braveSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("X-Subscription-Token") != secretKey {
-			http.Error(w, "unauthorized", 401)
-			return
-		}
-		http.Error(w, "rate limited for key "+secretKey, 429)
-	}))
-	defer braveSrv.Close()
-
-	bp := &braveProvider{apiKey: secretKey, baseURL: braveSrv.URL, httpClient: braveSrv.Client()}
-	_, bErr := bp.Search(context.Background(), "test", 5)
-	if bErr == nil {
-		t.Fatal("expected error from brave mock")
-	}
-	if strings.Contains(bErr.Error(), secretKey) || !strings.Contains(bErr.Error(), "[REDACTED]") {
-		t.Fatalf("secret leaked in error output: %v", bErr)
+	redacted := RedactSecrets("rate limited for key "+secretKey, []string{secretKey})
+	if strings.Contains(redacted, secretKey) || !strings.Contains(redacted, "[REDACTED]") {
+		t.Fatalf("secret leaked in error output: %v", redacted)
 	}
 }
