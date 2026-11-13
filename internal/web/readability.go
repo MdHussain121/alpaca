@@ -24,9 +24,16 @@ func WrapUntrustedContent(source, body string) string {
 // selects primary article/main content when present, strips boilerplate (script/style/nav/footer/aside),
 // and emits compact readable Markdown.
 func ExtractReadableMarkdown(rawHTML string) (title string, markdown string) {
+	title, markdown, _ = ExtractReadable(rawHTML)
+	return title, markdown
+}
+
+// ExtractReadable also returns absolute and relative links from the main
+// content so callers can extend a session allowlist.
+func ExtractReadable(rawHTML string) (title string, markdown string, links []string) {
 	doc, err := xhtml.Parse(strings.NewReader(rawHTML))
 	if err != nil {
-		return "", strings.TrimSpace(rawHTML)
+		return "", strings.TrimSpace(rawHTML), nil
 	}
 
 	title = strings.TrimSpace(findFirstText(doc, "title"))
@@ -41,7 +48,30 @@ func ExtractReadableMarkdown(rawHTML string) (title string, markdown string) {
 	if title != "" && !strings.Contains(strings.ToLower(firstNonEmptyLine(out)), strings.ToLower(title)) {
 		out = "# " + title + "\n\n" + out
 	}
-	return title, strings.TrimSpace(out)
+	seen := map[string]bool{}
+	walkLinks(root, func(href string) {
+		href = strings.TrimSpace(href)
+		if href == "" || strings.HasPrefix(href, "#") || strings.HasPrefix(strings.ToLower(href), "javascript:") {
+			return
+		}
+		if !seen[href] {
+			seen[href] = true
+			links = append(links, href)
+		}
+	})
+	return title, strings.TrimSpace(out), links
+}
+
+func walkLinks(n *xhtml.Node, fn func(string)) {
+	if n == nil {
+		return
+	}
+	if n.Type == xhtml.ElementNode && strings.EqualFold(n.Data, "a") {
+		fn(attrVal(n, "href"))
+	}
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		walkLinks(c, fn)
+	}
 }
 
 func firstNonEmptyLine(s string) string {
