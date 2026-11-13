@@ -32,6 +32,16 @@ func TestParseKVAndLayerLines(t *testing.T) {
 	}
 }
 
+func TestParseLoadMode(t *testing.T) {
+	m := Metrics{}
+	if !ParseLine("load_tensors: loading model tensors, this can take a while... (load_mode = mmap)", &m) {
+		t.Fatal("load mode line not recognised")
+	}
+	if m.LoadMode != "mmap" {
+		t.Fatalf("LoadMode = %q, want mmap", m.LoadMode)
+	}
+}
+
 func TestParseIgnoresUnrelatedLines(t *testing.T) {
 	m := Metrics{}
 	if ParseLine("llama_model_loader: loaded meta data", &m) {

@@ -406,6 +406,7 @@ var (
 	kernel32                             = windows.NewLazySystemDLL("kernel32.dll")
 	procGlobalMemoryStatusEx             = kernel32.NewProc("GlobalMemoryStatusEx")
 	procGetProcessMemoryInfo             = kernel32.NewProc("K32GetProcessMemoryInfo")
+	procEmptyWorkingSet                  = kernel32.NewProc("K32EmptyWorkingSet")
 	procGetLogicalProcessorInformationEx = kernel32.NewProc("GetLogicalProcessorInformationEx")
 )
 
@@ -560,6 +561,26 @@ func ProcessRAM(pid uint32) (workingSet, private uint64, err error) {
 		return 0, 0, callErr
 	}
 	return uint64(mc.workingSetSize), uint64(mc.privateUsage), nil
+}
+
+// TrimWorkingSet moves a live process's resident pages to the standby list.
+// After a fully GPU-offloaded mmap load the GGUF's file pages are no longer
+// needed on the host, so this keeps the reported RAM close to the real private
+// host buffers instead of the whole model file.
+func TrimWorkingSet(pid uint32) error {
+	if pid == 0 {
+		return nil
+	}
+	const access = windows.PROCESS_QUERY_INFORMATION | windows.PROCESS_SET_QUOTA
+	h, err := windows.OpenProcess(access, false, pid)
+	if err != nil {
+		return err
+	}
+	defer windows.CloseHandle(h)
+	if r, _, callErr := procEmptyWorkingSet.Call(uintptr(h)); r == 0 {
+		return callErr
+	}
+	return nil
 }
 
 // VRAMStatus queries current GPU VRAM total and free bytes via nvidia-smi.

@@ -22,6 +22,7 @@ var (
 	reListening   = regexp.MustCompile(`server is listening on`)
 	reLayers      = regexp.MustCompile(`offloaded\s+([0-9]+)/([0-9]+)\s+layers to GPU`)
 	reNCtx        = regexp.MustCompile(`llama_context:\s*n_ctx\s*=\s*([0-9]+)`)
+	reLoadMode    = regexp.MustCompile(`load_mode\s*=\s*(none|mmap|mlock|dio)`)
 )
 
 // Metrics is the live state parsed out of the llama-server log.
@@ -39,6 +40,7 @@ type Metrics struct {
 	CPUComputeMiB float64
 	LayersOnGPU   int
 	TotalLayers   int
+	LoadMode      string
 	NCtx          int
 	Listening     bool
 }
@@ -126,6 +128,10 @@ func ParseLine(line string, m *Metrics) bool {
 			m.NCtx = v
 			changed = true
 		}
+	}
+	if sub := reLoadMode.FindStringSubmatch(line); sub != nil {
+		m.LoadMode = sub[1]
+		changed = true
 	}
 	if reListening.MatchString(line) {
 		m.Listening = true
