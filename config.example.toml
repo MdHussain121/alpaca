@@ -33,9 +33,6 @@ long_gen_bell = false
 # extra_models = ["E:\\Models\\example.gguf"]
 
 [web]
-# Optional web search provider: "brave", "tavily", "searxng", or "" (disabled)
-search_provider = ""
-# Prefer environment variable ALPACA_WEB_SEARCH_KEY rather than storing keys on a removable drive
-search_api_key = ""
+# Web search works without keys. Optionally point at your own SearXNG instance.
 searxng_url = ""
 max_fetch_bytes = 524288

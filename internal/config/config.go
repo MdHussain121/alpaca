@@ -14,12 +14,10 @@ import (
 	"github.com/MdHussain121/alpaca/internal/flags"
 )
 
-// WebConfig controls optional web search and fetch limits.
+// WebConfig controls keyless web search and fetch limits.
 type WebConfig struct {
-	SearchProvider string `toml:"search_provider"` // "brave", "tavily", "searxng", or ""
-	SearchAPIKey   string `toml:"search_api_key"`  // secret - travels with the drive if set in config.toml
-	SearXNGURL     string `toml:"searxng_url"`
-	MaxFetchBytes  int    `toml:"max_fetch_bytes"`
+	SearXNGURL    string `toml:"searxng_url"`
+	MaxFetchBytes int    `toml:"max_fetch_bytes"`
 }
 
 // SamplingProfile defines a named generation sampling preset applied via /profile.
@@ -119,11 +117,6 @@ func (c *Config) EffectiveCompactionPct() int {
 		return 80
 	}
 	return c.CompactionThresholdPct
-}
-
-// HasWebSearchKeyInFile reports whether an API key is persisted inside config.toml.
-func (c *Config) HasWebSearchKeyInFile() bool {
-	return c != nil && strings.TrimSpace(c.Web.SearchAPIKey) != ""
 }
 
 // Preset is a saved configuration for a model, stored in presets/<id>.toml.

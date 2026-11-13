@@ -17,7 +17,7 @@ import (
 	"github.com/MdHussain121/alpaca/internal/web"
 )
 
-func TestWebSearchHiddenWhenUnconfigured(t *testing.T) {
+func TestWebSearchKeylessWhenUnconfigured(t *testing.T) {
 	t.Setenv("BRAVE_API_KEY", "")
 	t.Setenv("TAVILY_API_KEY", "")
 	t.Setenv("ALPACA_WEB_SEARCH_KEY", "")
@@ -31,14 +31,41 @@ func TestWebSearchHiddenWhenUnconfigured(t *testing.T) {
 	reg := NewDefaultRegistry()
 	RegisterWebTools(reg, WebToolsConfig{})
 
-	if _, ok := reg.Lookup("web_search"); ok {
-		t.Fatal("web_search must NOT be registered when no provider is configured")
+	if _, ok := reg.Lookup("web_search"); !ok {
+		t.Fatal("web_search must be registered without any keys")
 	}
 	if _, ok := reg.Lookup("web_fetch"); !ok {
 		t.Fatal("web_fetch must be registered under group web")
 	}
-	if status := reg.WebSearchStatus(); !strings.Contains(status, "disabled") {
-		t.Fatalf("expected descriptive WebSearchStatus when unconfigured, got %q", status)
+	if _, ok := reg.Lookup("web_research"); !ok {
+		t.Fatal("web_research must be registered under group web")
+	}
+	if status := reg.WebSearchStatus(); !strings.Contains(status, "keyless") {
+		t.Fatalf("expected keyless WebSearchStatus, got %q", status)
+	}
+}
+
+func TestFinalAnswerDropsUnverifiedURLsAndAddsRetrievedSources(t *testing.T) {
+	session := web.NewSession()
+	session.SeedText("Read https://user.example/page")
+	session.RememberSearch("go docs", []web.SearchResult{{Title: "Go", URL: "https://go.dev/doc/"}})
+	session.RecordFetch("https://go.dev/doc/", nil)
+	reg := &Registry{webSession: session}
+
+	out, suffix := appendRetrievedSources("Answer from https://invented.example/nope", reg)
+	if strings.Contains(out, "invented.example") {
+		t.Fatalf("unverified URL survived: %q", out)
+	}
+	if !strings.Contains(suffix, "https://go.dev/doc") {
+		t.Fatalf("retrieved source missing from suffix: %q", suffix)
+	}
+	if !strings.Contains(out, "Sources:") {
+		t.Fatalf("sources block missing: %q", out)
+	}
+
+	allowed, suffix := appendRetrievedSources("See https://user.example/page", reg)
+	if !strings.Contains(allowed, "https://user.example/page") || suffix != "" {
+		t.Fatalf("user-provided URL should be kept without extra sources: %q / %q", allowed, suffix)
 	}
 }
 
@@ -106,7 +133,7 @@ func TestPromptInjectionBlockedBySessionTaintInWorkspaceAutoMode(t *testing.T) {
 	res := RunTurn(context.Background(), LoopRequest{
 		BaseURL:      llmSrv.URL,
 		SystemPrompt: "Be helpful.",
-		History:      []runner.APIMessage{{Role: "user", Content: "Read that page"}},
+		History:      []runner.APIMessage{{Role: "user", Content: "Read that page " + pageSrv.URL + "/evil"}},
 		Registry:     reg,
 		Permissions:  perms,
 		ToolCtx: ToolContext{

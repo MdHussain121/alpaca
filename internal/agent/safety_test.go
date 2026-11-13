@@ -60,7 +60,7 @@ func TestPromptInjectionAllPermissionModes(t *testing.T) {
 			var prompted []string
 			res := RunTurn(context.Background(), LoopRequest{
 				BaseURL:     llmSrv.URL,
-				History:     []runner.APIMessage{{Role: "user", Content: "Fetch the page."}},
+				History:     []runner.APIMessage{{Role: "user", Content: "Fetch the page " + evilSrv.URL}},
 				Registry:    reg,
 				Permissions: perm,
 				ToolCtx: ToolContext{

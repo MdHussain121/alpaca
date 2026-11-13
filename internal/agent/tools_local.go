@@ -18,6 +18,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/MdHussain121/alpaca/internal/runner"
+	"github.com/MdHussain121/alpaca/internal/web"
 )
 
 const (
@@ -82,6 +83,7 @@ type ToolContext struct {
 	Checkpoints   *CheckpointStore
 	Shell         ShellKind
 	Tainted       bool
+	ContextTokens int
 	AskUser       AskUserFn
 	StageSkill    StageSkillFn
 }
@@ -117,6 +119,8 @@ type Registry struct {
 	order           []string
 	groupEnabled    map[string]bool
 	webSearchReason string
+	webSession      *web.Session
+	webChain        *web.Chain
 }
 
 // NewDefaultRegistry creates a Registry preloaded with all local tools.
@@ -175,6 +179,22 @@ func (r *Registry) WebSearchStatus() string {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.webSearchReason
+}
+
+// SeedWebSession allowlists URLs from a user message before the model can
+// call a web tool.
+func (r *Registry) SeedWebSession(text string) {
+	r.mu.RLock()
+	s := r.webSession
+	r.mu.RUnlock()
+	s.SeedText(text)
+}
+
+// WebSession exposes session state for diagnostics and evaluation.
+func (r *Registry) WebSession() *web.Session {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.webSession
 }
 
 func (r *Registry) SetGroupEnabled(group string, on bool) {

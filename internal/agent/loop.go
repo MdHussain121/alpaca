@@ -80,6 +80,7 @@ type LoopRequest struct {
 	MaxSteps           int
 	MaxTokens          int
 	Temperature        float64
+	ToolTemperature    float64
 	TopP               float64
 	TopK               int
 	MinP               float64
@@ -108,6 +109,59 @@ type LoopResult struct {
 	Err              error
 }
 
+func appendRetrievedSources(text string, reg *Registry) (string, string) {
+	if reg == nil {
+		return text, ""
+	}
+	session := reg.WebSession()
+	urls := session.FetchedSnapshot()
+	if len(urls) == 0 && session.ResultCount() == 0 {
+		return text, ""
+	}
+
+	cleaned, removed := removeUnverifiedURLs(text, session)
+	if len(urls) == 0 {
+		if !removed {
+			return cleaned, ""
+		}
+		suffix := "\n\nSources: no page was retrieved; an unverified URL was removed."
+		return strings.TrimRight(cleaned, " \n") + suffix, suffix
+	}
+	if !removed && (strings.Contains(strings.ToLower(cleaned), "http://") || strings.Contains(strings.ToLower(cleaned), "https://")) {
+		return cleaned, ""
+	}
+	var b strings.Builder
+	b.WriteString("\n\nSources:\n")
+	for i, u := range urls {
+		if i >= 5 {
+			break
+		}
+		fmt.Fprintf(&b, "- [%d] %s\n", i+1, u)
+	}
+	suffix := b.String()
+	return strings.TrimRight(cleaned, " \n") + suffix, suffix
+}
+
+func removeUnverifiedURLs(text string, session *web.Session) (string, bool) {
+	removed := false
+	out := text
+	for _, field := range strings.Fields(text) {
+		if !strings.Contains(field, "://") {
+			continue
+		}
+		u := strings.Trim(field, " \t\r\n()[]<>{}\"'.,;:!?")
+		if !strings.HasPrefix(u, "http://") && !strings.HasPrefix(u, "https://") {
+			continue
+		}
+		if session.IsAllowed(u) {
+			continue
+		}
+		out = strings.ReplaceAll(out, u, "")
+		removed = true
+	}
+	return out, removed
+}
+
 // RunTurn executes one full multi-step tool loop until the model emits a plain assistant
 // response (without tool calls), hits MaxSteps, or is interrupted via ctx.
 func RunTurn(ctx context.Context, req LoopRequest) LoopResult {
@@ -119,6 +173,12 @@ func RunTurn(ctx context.Context, req LoopRequest) LoopResult {
 	var toolDefs []runner.ToolDef
 	if req.Registry != nil {
 		toolDefs = req.Registry.ToolDefs()
+		for i := len(req.History) - 1; i >= 0; i-- {
+			if req.History[i].Role == "user" {
+				req.Registry.SeedWebSession(req.History[i].Content)
+				break
+			}
+		}
 	}
 
 	// Build prompt-cache-stable prefix cleanly: system prompt first, followed by history.
@@ -155,12 +215,16 @@ func RunTurn(ctx context.Context, req LoopRequest) LoopResult {
 		res.Steps = step
 
 		cacheOn := true
+		temp := req.Temperature
+		if step > 1 && req.ToolTemperature > 0 {
+			temp = req.ToolTemperature
+		}
 		chatReq := runner.ChatRequest{
 			Messages:           convo,
 			Tools:              toolDefs,
 			CachePrompt:        &cacheOn,
 			MaxTokens:          req.MaxTokens,
-			Temperature:        req.Temperature,
+			Temperature:        temp,
 			TopP:               req.TopP,
 			TopK:               req.TopK,
 			MinP:               req.MinP,
@@ -218,6 +282,12 @@ func RunTurn(ctx context.Context, req LoopRequest) LoopResult {
 		}
 
 		if len(calls) == 0 {
+			if withSources, suffix := appendRetrievedSources(textOut, req.Registry); suffix != "" {
+				textOut = withSources
+				if req.OnEvent != nil {
+					emit(LoopEvent{Kind: EvtDelta, Delta: runner.ChatDelta{Content: suffix}})
+				}
+			}
 			res.FinalContent = textOut
 			if strings.TrimSpace(textOut) != "" {
 				appended = append(appended, runner.APIMessage{Role: "assistant", Content: textOut})
