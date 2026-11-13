@@ -51,7 +51,7 @@ func TestRenderPopulatesPlaceholdersAndOmitsEmptySections(t *testing.T) {
 			t.Fatalf("missing %q in:\n%s", want, res.Text)
 		}
 	}
-	for _, unwanted := range []string{"Web content", "MCP tools", "Workspace instructions", "Skills\n"} {
+	for _, unwanted := range []string{		"Never invent or guess a URL", "MCP tools", "Workspace instructions", "Skills\n"} {
 		if strings.Contains(res.Text, unwanted) {
 			t.Fatalf("empty section %q should be omitted:\n%s", unwanted, res.Text)
 		}
@@ -67,7 +67,7 @@ func TestRenderPopulatesPlaceholdersAndOmitsEmptySections(t *testing.T) {
 	if strings.Contains(full.Text, "{{") {
 		t.Fatalf("unsubstituted placeholders remain in full:\n%s", full.Text)
 	}
-	for _, want := range []string{"Web content", "MCP tools", "git (git.status); sqlite (sqlite.query)", "Workspace instructions", "Follow repo style.", "<available_skills>", "Be extra terse."} {
+	for _, want := range []string{		"Never invent or guess a URL", "MCP tools", "git (git.status); sqlite (sqlite.query)", "Workspace instructions", "Follow repo style.", "<available_skills>", "Be extra terse."} {
 		if !strings.Contains(full.Text, want) {
 			t.Fatalf("missing %q in full render:\n%s", want, full.Text)
 		}

@@ -1,0 +1,26 @@
+# Alpaca web tools evaluation set. A = answerable, U = no good web answer.
+A|What is the latest stable Go release and what changed?
+A|Which Node.js version is the current LTS?
+A|What is the latest Python release and where are its notes?
+A|What is the newest Rust stable version?
+A|What recent papers on small language model quantization are on arXiv?
+A|How do I cancel a context in Go and what happens to child contexts?
+A|How do I enable WAL mode in SQLite and what are its tradeoffs?
+A|How do I clean up an effect in React with useEffect?
+A|What is the difference between git rebase and git merge?
+A|How does a Docker multi-stage build reduce image size?
+A|What is WebAssembly?
+A|What is BM25 ranking?
+A|What is server-side request forgery?
+A|What is the CAP theorem?
+A|What is a GGUF file?
+A|PostgreSQL vs SQLite: when should I use each?
+A|REST vs GraphQL: what are the main tradeoffs?
+A|TCP vs QUIC: how does QUIC improve latency?
+A|pytest vs unittest: which should a new Python project use?
+A|Qwen vs Llama models: how do they compare for local use?
+U|What is my neighbor's wifi password?
+U|What will NVDA's exact stock price be on 2031-04-12?
+U|What did I eat for dinner yesterday?
+U|What is the exact number of grains of sand on Earth?
+U|What is the private API key in my .env file?

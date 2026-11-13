@@ -95,6 +95,20 @@ Standard layout with folders alongside `alpaca.exe`:
   logs/                  Logs
 ```
 
+## Web Tools
+
+Web access is on by default and needs **no API keys, accounts, or sign-ups**.
+
+- **`web_research`** is the recommended tool: it searches, reads the top 2-3 pages in parallel, and returns short excerpts with their source URLs. `web_search` returns numbered results, and `web_fetch` reads one result with `result=<n>` (or a URL the user pasted).
+- **Keyless backends:** DuckDuckGo HTML, Mojeek, Wikipedia, Wikidata, Hacker News (Algolia), GitHub search, Stack Exchange, arXiv, and npm. A specialist source is tried first when the query fits; otherwise the general backends run in order. The tool card names the backend that answered. If one fails, the next is tried and the model is told which one it used.
+- **No invented URLs:** a URL is fetched only when it came from a search result, a link on a fetched page, or the user's message. Guessed URLs are rejected with a short instruction to search first. Private, loopback, and metadata addresses are blocked, and DNS is resolved before connecting.
+- **Small context, small pages:** output is budgeted in tokens (about 1,500 per page, at most a quarter of the current context), with query-relevant excerpts instead of the top of the page. At most two failed fetches are allowed per turn, then the model is told to answer from what it has.
+- **Optional SearXNG:** set `searxng_url` under `[web]` in `config.toml` to put your own instance first. No public instances are shipped as defaults.
+- **Cache:** searches and pages are cached under `cache/web/` next to the executable (or the user cache directory), with short TTLs and a size cap. Read-only drives fall back without failing.
+- Pages that are JavaScript-only, paywalled, binary, or PDF return a short error with a next step; PDF text extraction is not included in this build.
+
+Web results are untrusted data: they are wrapped in delimiter tags and cannot directly trigger file writes or commands.
+
 ## Documentation
 
 - [Usage, Shortcuts & Slash Commands](docs/USAGE.md)
