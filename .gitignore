@@ -31,3 +31,6 @@ FIX_REPORT.md
 *.private.md
 .gguf-cache.json
 .gguf-cache.json.tmp
+/cache/
+cmd/webbench/*.json
+
