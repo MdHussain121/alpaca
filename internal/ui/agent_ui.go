@@ -289,6 +289,7 @@ func (m *Model) startAgentTurnWithUser(userTurn chatTurn, appendUserTurn bool) (
 		MaxSteps:           agent.DefaultMaxSteps,
 		MaxTokens:          m.settings.MaxTokens,
 		Temperature:        m.settings.Temp,
+		ToolTemperature:    m.settings.ToolTemp,
 		TopP:               m.settings.TopP,
 		TopK:               m.settings.TopK,
 		MinP:               m.settings.MinP,
@@ -303,6 +304,7 @@ func (m *Model) startAgentTurnWithUser(userTurn chatTurn, appendUserTurn bool) (
 			SkillsDataDir: m.effectiveSkillsDataDir(),
 			SessionID:     m.sessionID,
 			TurnNumber:    turnNum,
+			ContextTokens: m.effectiveCtxTotal(),
 			Checkpoints:   m.checkpoints,
 			Shell:         agent.ShellCmd,
 			AskUser:       nil, // populated below
@@ -1038,6 +1040,9 @@ func (m *Model) handleToolsModalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			if g.Name == "exec" && next {
 				m.appendExecHonestyNotice()
 			}
+			if g.Name == "web" && next {
+				m.appendWebNotice()
+			}
 			m.toastf("tool group %s: %s", g.Name, map[bool]string{true: "on", false: "off"}[next])
 			return m, m.measureToolSchemaTokensCmd()
 		}
@@ -1090,6 +1095,14 @@ func (m *Model) appendExecHonestyNotice() {
 	}
 	m.execNoticeShown = true
 	m.appendInfoTurn("Warning: run_command executes shell commands with your Windows user permissions. Path sandboxing confines file tools only, and /undo cannot revert shell side effects.")
+}
+
+func (m *Model) appendWebNotice() {
+	if m.webNoticeShown {
+		return
+	}
+	m.webNoticeShown = true
+	m.appendInfoTurn("Web tools query public search engines and pages, with no keys. Queries and fetched URLs leave this machine; fetched text is untrusted data.")
 }
 
 // --- Modal overlays ---
@@ -1274,9 +1287,6 @@ func (m *Model) overlayToolsModal(bg string) string {
 		for _, wl := range wrapText(wsStatus, innerW) {
 			lines = append(lines, st.Render(wl))
 		}
-	}
-	if m.cfg != nil && m.cfg.HasWebSearchKeyInFile() {
-		lines = append(lines, truncateANSI(m.sty.sWarning.Render("Warning: API keys saved in config.toml travel with the drive."), innerW))
 	}
 	if m.mcpManager != nil {
 		if sum := m.mcpManager.Summary(); sum.Warning != "" {

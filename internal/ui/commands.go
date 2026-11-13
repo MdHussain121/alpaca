@@ -1053,6 +1053,9 @@ func (m *Model) runToolsCommand(arg string) (tea.Model, tea.Cmd) {
 	if group == "exec" && next {
 		m.appendExecHonestyNotice()
 	}
+	if group == "web" && next {
+		m.appendWebNotice()
+	}
 	state := map[bool]string{true: "on", false: "off"}[next]
 	m.toastf("tools %s: %s (~%d schema tok)", group, state, m.estimateToolTokensHeuristic())
 	return m, m.measureToolSchemaTokensCmd()

@@ -590,6 +590,23 @@ func (m *Model) fields() []field {
 			},
 		},
 		{
+			label:  "Tool temp",
+			value:  func() string { return fmt.Sprintf("%.2f", m.settings.ToolTemp) },
+			slider: func() (float64, bool) { return rangeRatio(m.settings.ToolTemp, 0, 1.0), true },
+			delta: func(dir int) {
+				m.settings.ToolTemp = clampFloat(round2(m.settings.ToolTemp+float64(dir)*0.05), 0.05, 1)
+			},
+			edit: func() string { return strconv.FormatFloat(m.settings.ToolTemp, 'f', -1, 64) },
+			apply: func(v string) error {
+				f, err := parseFloat(v, 0, 1)
+				if err != nil {
+					return fmt.Errorf("tool temp: 0..1")
+				}
+				m.settings.ToolTemp = f
+				return nil
+			},
+		},
+		{
 			label:  "Top-p",
 			value:  func() string { return fmt.Sprintf("%.2f", m.settings.TopP) },
 			slider: func() (float64, bool) { return rangeRatio(m.settings.TopP, 0, 1.0), true },

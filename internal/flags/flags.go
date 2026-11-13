@@ -41,6 +41,7 @@ type Settings struct {
 	SpecType        string  `toml:"spec_type"`
 	Parallel        int     `toml:"parallel"`
 	Temp            float64 `toml:"temp"`
+	ToolTemp        float64 `toml:"tool_temp"`
 	TopP            float64 `toml:"top_p"`
 	TopK            int     `toml:"top_k"`
 	MinP            float64 `toml:"min_p"`
@@ -86,6 +87,7 @@ func Default(threads, port int) Settings {
 		SpecType:        "none",
 		Parallel:        1,
 		Temp:            0.7,
+		ToolTemp:        0.25,
 		TopP:            0.95,
 		TopK:            40,
 		MinP:            0.0,
@@ -185,6 +187,12 @@ func (s *Settings) ClampTemp() {
 	}
 	if s.Temp > 5 {
 		s.Temp = 5
+	}
+	if s.ToolTemp <= 0 {
+		s.ToolTemp = 0.25
+	}
+	if s.ToolTemp > 1 {
+		s.ToolTemp = 1
 	}
 	if s.TopP < 0 {
 		s.TopP = 0

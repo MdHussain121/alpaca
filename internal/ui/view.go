@@ -334,9 +334,6 @@ func (m *Model) viewSettings(w, h int) string {
 			"",
 			m.sty.muted().Render(truncate("  select a model to configure it", innerW)),
 		}
-		if m.cfg != nil && m.cfg.HasWebSearchKeyInFile() {
-			body = append(body, "", m.sty.warning().Render(truncate("  ⚠ API key in config.toml travels with the drive", innerW)))
-		}
 		return m.sty.panel(w, h, "Settings", m.focus == 1, body)
 	}
 
@@ -430,14 +427,9 @@ func (m *Model) viewSettings(w, h int) string {
 		for len(body) < bodyH-1 {
 			body = append(body, "")
 		}
-		if m.cfg != nil && m.cfg.HasWebSearchKeyInFile() {
-			warn := "  ⚠ API key in config.toml travels with the drive"
-			body = append(body, m.sty.warning().Render(truncate(warn, innerW)))
-		} else {
-			scrollHint := fmt.Sprintf("%d/%d", m.fieldIdx+1, len(fs))
-			hint := fmt.Sprintf("  tab panels · ←→ slide · enter edit · t theme · %s", scrollHint)
-			body = append(body, m.sty.muted().Render(truncate(hint, innerW)))
-		}
+		scrollHint := fmt.Sprintf("%d/%d", m.fieldIdx+1, len(fs))
+		hint := fmt.Sprintf("  tab panels · ←→ slide · enter edit · t theme · %s", scrollHint)
+		body = append(body, m.sty.muted().Render(truncate(hint, innerW)))
 	}
 
 	return m.sty.panel(w, h, "Settings", m.focus == 1, body)

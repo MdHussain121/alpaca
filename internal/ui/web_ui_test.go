@@ -32,7 +32,7 @@ func TestWebUIPortableWarningTaintBadgeAndInjectionBlock(t *testing.T) {
 	t.Setenv("ALPACA_SEARXNG_URL", "")
 	t.Setenv("LLM_SEARXNG_URL", "")
 
-	// 1. Check /tools shows why web_search is disabled when unconfigured
+	// 1. Check /tools shows keyless web search without any configuration
 	m0 := testUI(t)
 	m0.screen = screenRun
 	m0.runTab = runTabChat
@@ -41,29 +41,20 @@ func TestWebUIPortableWarningTaintBadgeAndInjectionBlock(t *testing.T) {
 	m0.resizeRunViews()
 	m0.chatInput.SetValue("/tools")
 	m0.Update(tea.KeyMsg{Type: tea.KeyEnter})
-	if v := stripANSI(m0.View()); !strings.Contains(v, "web_search disabled") {
-		t.Fatalf("expected /tools modal to explain missing web_search provider:\n%s", v)
+	if v := stripANSI(m0.View()); !strings.Contains(v, "web_search active (keyless") {
+		t.Fatalf("expected /tools modal to show keyless web search:\n%s", v)
 	}
 	m0.Update(tea.KeyMsg{Type: tea.KeyEsc})
 
-	// 2. Check portable drive key warning on launcher Settings screen AND /tools modal when key is set in config.toml
+	// 2. Build a model with loopback web access for the injection flow.
 	ws := t.TempDir()
 	cfg := config.Load(ws)
-	cfg.Web = config.WebConfig{
-		SearchProvider: "brave",
-		SearchAPIKey:   "BSA-PORTABLE-SECRET-9999",
-	}
 	m := New(ws, cfg)
 	m.ready = true
 	m.width, m.height = 120, 34
 	m.agentWorkDir = ws
 	m.webClientOpts = web.ClientOptions{AllowLoopbackForTest: true}
 	m.reloadWebTools()
-
-	launcherView := stripANSI(m.View())
-	if !strings.Contains(launcherView, "travels with the drive") {
-		t.Fatalf("expected portable API key warning in launcher settings panel:\n%s", launcherView)
-	}
 
 	// 3. Test live prompt-injection flow in workspace-auto mode through UI modals
 	pageSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

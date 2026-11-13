@@ -86,6 +86,7 @@ type Model struct {
 	spinner  spinner.Model
 	healthCh chan error
 
+	webNoticeShown bool
 	quitConfirm    bool
 	backConfirm    bool
 	runQuitConfirm bool
