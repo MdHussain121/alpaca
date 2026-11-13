@@ -177,6 +177,7 @@ type Model struct {
 	telemetry        runner.Telemetry
 	procRAMBytes     uint64
 	procPrivBytes    uint64
+	ramTrimmed       bool
 	sysRAMAvail      uint64
 	sysRAMTotal      uint64
 	telemetryPending bool
@@ -252,6 +253,9 @@ type launchMsg struct {
 
 // stoppedMsg reports a finished (possibly asynchronous) stop.
 type stoppedMsg struct{ action string }
+
+// workingSetTrimMsg reports that the post-load working-set trim finished.
+type workingSetTrimMsg struct{}
 
 type exitMsg struct{ err error }
 
@@ -905,6 +909,14 @@ func (m *Model) updateInner(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.metrics.PromptTokSec = m.telemetry.PromptTokSec
 			}
 		}
+		if m.shouldTrimServerRAM() {
+			m.ramTrimmed = true
+			return m, trimServerWorkingSetCmd(uint32(m.proc.PID()))
+		}
+		return m, nil
+
+	case workingSetTrimMsg:
+		m.procRAMBytes = 0
 		return m, nil
 
 	case chatStreamEvt:
@@ -1921,6 +1933,7 @@ func (m *Model) launch() (tea.Model, tea.Cmd) {
 	m.modelCaps = runner.ModelProps{}
 	m.procRAMBytes = 0
 	m.procPrivBytes = 0
+	m.ramTrimmed = false
 	m.activePort = m.settings.Port
 	m.logView.SetContent("")
 	m.resetChat()
@@ -2093,6 +2106,34 @@ func stopCmd(p *runner.Process, action string) tea.Cmd {
 		p.Stop()
 		return stoppedMsg{action: action}
 	}
+}
+
+func trimServerWorkingSetCmd(pid uint32) tea.Cmd {
+	return func() tea.Msg {
+		_ = hw.TrimWorkingSet(pid)
+		return workingSetTrimMsg{}
+	}
+}
+
+// shouldTrimServerRAM reports whether llama-server can drop its resident host
+// pages: the GGUF is mmap'd and fully on the GPU, with no CPU experts or KV
+// that would fault the mapping back in during inference.
+func (m *Model) shouldTrimServerRAM() bool {
+	if m.ramTrimmed || m.proc == nil || m.proc.PID() == 0 || m.status != "READY" {
+		return false
+	}
+	if m.metrics.LoadMode != "mmap" || m.metrics.TotalLayers == 0 ||
+		m.metrics.LayersOnGPU < m.metrics.TotalLayers || m.metrics.CPUKVMiB > 0 {
+		return false
+	}
+	if m.settings.NCpuMoe > 0 || m.settings.NoKVOffload {
+		return false
+	}
+	switch m.settings.LoadMode {
+	case "none", "mlock", "dio":
+		return false
+	}
+	return !strings.Contains(strings.ToLower(m.settings.ExtraArgs), "mlock")
 }
 
 var clipboardWriter = copyClipboardClipExe

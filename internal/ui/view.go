@@ -167,9 +167,6 @@ func (m *Model) viewLauncher() string {
 	if m.sessionsModal != nil {
 		out = m.overlaySessionsModal(out)
 	}
-	if m.permModal != nil {
-		out = m.overlayPermModal(out)
-	}
 	if m.skillApproveModal != nil {
 		out = m.overlaySkillApproveModal(out)
 	}
@@ -649,9 +646,6 @@ func (m *Model) viewRun() string {
 	}
 	if m.sessionsModal != nil {
 		out = m.overlaySessionsModal(out)
-	}
-	if m.permModal != nil {
-		out = m.overlayPermModal(out)
 	}
 	if m.skillApproveModal != nil {
 		out = m.overlaySkillApproveModal(out)

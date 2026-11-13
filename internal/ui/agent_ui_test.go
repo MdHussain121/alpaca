@@ -400,6 +400,7 @@ func TestAgentCardGoldenSnapshots(t *testing.T) {
 					Diff:        "--- a/src/config.go\n+++ b/src/config.go\n@@ -1,3 +1,3 @@\n package cfg\n-var Port = 8080\n+var Port = 9090\n",
 				},
 			}
+			m.refreshChatView(true)
 
 			got := strings.TrimSpace(stripANSI(m.View()))
 			assertNamedGolden(t, "permdiff-"+sz.tag+".golden", got, update)

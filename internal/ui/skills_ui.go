@@ -656,7 +656,7 @@ func (m *Model) overlaySkillsModal(bg string) string {
 		lines = append(lines, m.sty.sMuted.Render("↑↓ select · space toggle · enter view · n new · r rename · d trash · o editor · u use · esc close"))
 	}
 
-	box := m.sty.panel(boxW, len(lines)+2, "Agent Skills (/skills)", true, lines)
+	box := m.sty.panel(boxW, len(lines)+3, "Agent Skills (/skills)", true, lines)
 	return lipgloss.Place(w, h, lipgloss.Center, lipgloss.Center, box,
 		lipgloss.WithWhitespaceChars(" "), lipgloss.WithWhitespaceForeground(m.sty.t.Bg))
 }
@@ -912,7 +912,7 @@ func (m *Model) overlaySkillApproveModal(bg string) string {
 		lines = append(lines, m.sty.sMuted.Render("[y] approve & save · [e] edit inline · [o] open staged · [r] reload · [n] reject · [d] reject w/ reason"))
 	}
 
-	box := m.sty.panel(boxW, len(lines)+2, "Stage Skill (.alpaca/skills-staging)", true, lines)
+	box := m.sty.panel(boxW, len(lines)+3, "Stage Skill (.alpaca/skills-staging)", true, lines)
 	return lipgloss.Place(w, h, lipgloss.Center, lipgloss.Center, box,
 		lipgloss.WithWhitespaceChars(" "), lipgloss.WithWhitespaceForeground(m.sty.t.Bg))
 }

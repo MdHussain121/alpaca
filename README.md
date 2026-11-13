@@ -122,7 +122,7 @@ Web results are untrusted data: they are wrapped in delimiter tags and cannot di
 ## Security & Safety Limits
 
 - **Workspace confinement:** File tools canonicalize symlinks/junctions and reject paths outside the active workspace, UNC paths, ADS streams, and reserved Windows device names.
-- **Permission gates:** `run_command` (executes via `cmd.exe` with current user rights) and MCP tools (`server.tool`) always confirm unless allowlisted for the session; `/undo` reverts workspace file edits only, not external shell side effects.
+- **Permission gates:** `run_command` (executes via `cmd.exe` with current user rights) and MCP tools (`server.tool`) confirm inline with allow once / always allow / deny choices; `/undo` reverts workspace file edits only, not external shell side effects.
 - **Taint defense:** Web fetch/search results are wrapped in untrusted data tags, checked for SSRF (private/loopback/metadata IPs blocked), and elevate writes/exec calls to confirmation prompts.
 - **Zero telemetry:** All state stays locally inside the launcher root folder.
 

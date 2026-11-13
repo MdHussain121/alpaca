@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -46,18 +45,26 @@ type permModalState struct {
 	doneCh       <-chan agent.LoopResult
 	enteringNote bool
 	noteInput    textinput.Model
-	diffScroll   int
+	choice       int // 0 allow once, 1 always allow, 2 deny
 }
 
+const (
+	permChoiceAllow = iota
+	permChoiceAlways
+	permChoiceDeny
+)
+
 type askModalState struct {
-	gen      uint64
-	question string
-	options  []string
-	cursor   int
-	replyCh  chan<- askUserReply
-	ch       <-chan agentLoopMsg
-	doneCh   <-chan agent.LoopResult
-	input    textinput.Model
+	gen       uint64
+	question  string
+	options   []string
+	cursor    int
+	scroll    int
+	inputMode bool
+	replyCh   chan<- askUserReply
+	ch        <-chan agentLoopMsg
+	doneCh    <-chan agent.LoopResult
+	input     textinput.Model
 }
 
 type toolsModalState struct {
@@ -78,6 +85,7 @@ const (
 	agentEvtPermReq
 	agentEvtAskReq
 	agentEvtSkillStageReq
+	agentEvtHeartbeat
 	agentEvtDone
 )
 
@@ -398,6 +406,11 @@ func (m *Model) startAgentTurnWithUser(userTurn chatTurn, appendUserTurn bool) (
 		var lastFlush time.Time
 		var timer *time.Timer
 		var timerC <-chan time.Time
+		// Heartbeats keep the spinner alive while a tool blocks the loop without
+		// producing deltas (for example a slow build or test command).
+		heartbeat := time.NewTicker(150 * time.Millisecond)
+		defer heartbeat.Stop()
+		modalPending := false
 
 		stopTimer := func() {
 			if timer != nil {
@@ -436,6 +449,7 @@ func (m *Model) startAgentTurnWithUser(userTurn chatTurn, appendUserTurn bool) (
 					flushDelta()
 					return
 				}
+				modalPending = false
 				if act.ev != nil && act.ev.Kind == agent.EvtDelta {
 					d := act.ev.Delta
 					if d.Done {
@@ -516,6 +530,10 @@ func (m *Model) startAgentTurnWithUser(userTurn chatTurn, appendUserTurn bool) (
 						msg.kind = agentEvtTurnMsgs
 					}
 				}
+				switch msg.kind {
+				case agentEvtPermReq, agentEvtAskReq, agentEvtSkillStageReq:
+					modalPending = true
+				}
 				select {
 				case outCh <- msg:
 				case <-ctx.Done():
@@ -525,6 +543,14 @@ func (m *Model) startAgentTurnWithUser(userTurn chatTurn, appendUserTurn bool) (
 				timerC = nil
 				if !flushDelta() {
 					return
+				}
+			case <-heartbeat.C:
+				if modalPending {
+					continue
+				}
+				select {
+				case outCh <- agentLoopMsg{gen: gen, kind: agentEvtHeartbeat}:
+				default:
 				}
 			case <-ctx.Done():
 				return
@@ -560,6 +586,11 @@ func (m *Model) handleAgentLoopMsg(msg agentLoopMsg) (tea.Model, tea.Cmd) {
 	switch msg.kind {
 	case agentEvtDelta:
 		m.handleChatDelta(msg.ev.Delta)
+		return m, readAgentEvtCmd(msg.gen, msg.ch, msg.doneCh)
+
+	case agentEvtHeartbeat:
+		m.spinner, _ = m.spinner.Update(m.spinner.Tick())
+		m.refreshChatView(false)
 		return m, readAgentEvtCmd(msg.gen, msg.ch, msg.doneCh)
 
 	case agentEvtToolStart:
@@ -659,7 +690,13 @@ func (m *Model) handleAgentLoopMsg(msg agentLoopMsg) (tea.Model, tea.Cmd) {
 			ch:        msg.ch,
 			doneCh:    msg.doneCh,
 			noteInput: ni,
+			choice:    permChoiceAllow,
 		}
+		// Show the prompt inline with the chat, never on the logs tab.
+		m.runTab = runTabChat
+		m.chatInput.Blur()
+		m.refreshChatView(true)
+		m.chatView.GotoBottom()
 		return m, nil // pause event pump until user decides
 
 	case agentEvtAskReq:
@@ -668,18 +705,23 @@ func (m *Model) handleAgentLoopMsg(msg agentLoopMsg) (tea.Model, tea.Cmd) {
 		ti.Placeholder = "type your answer..."
 		ti.CharLimit = 500
 		ti.Width = 48
-		if len(msg.options) == 0 {
+		inputMode := len(msg.options) == 0
+		if inputMode {
 			ti.Focus()
 		}
+		m.runTab = runTabChat
+		m.chatInput.Blur()
 		m.askModal = &askModalState{
-			gen:      msg.gen,
-			question: msg.question,
-			options:  msg.options,
-			replyCh:  msg.askRep,
-			ch:       msg.ch,
-			doneCh:   msg.doneCh,
-			input:    ti,
+			gen:       msg.gen,
+			question:  msg.question,
+			options:   msg.options,
+			replyCh:   msg.askRep,
+			ch:        msg.ch,
+			doneCh:    msg.doneCh,
+			input:     ti,
+			inputMode: inputMode,
 		}
+		m.refreshChatView(false)
 		return m, nil // pause event pump until user answers
 
 	case agentEvtSkillStageReq:
@@ -724,6 +766,11 @@ func (m *Model) handleAgentLoopMsg(msg agentLoopMsg) (tea.Model, tea.Cmd) {
 		if len(m.chatMsgs) > 0 {
 			t := &m.chatMsgs[len(m.chatMsgs)-1]
 			if t.Role == "assistant" {
+				// Persist the full tool-call/tool-result exchange so the next turn
+				// sees valid history instead of an empty assistant message.
+				if len(msg.res.MessagesAppended) > 0 {
+					t.APIMessages = msg.res.MessagesAppended
+				}
 				if msg.res.PromptTokens > 0 || msg.res.CompletionTokens > 0 {
 					t.Tokens = msg.res.CompletionTokens
 					m.chatCtxUsed = msg.res.PromptTokens + msg.res.CompletionTokens
@@ -738,11 +785,17 @@ func (m *Model) handleAgentLoopMsg(msg agentLoopMsg) (tea.Model, tea.Cmd) {
 				if msg.res.PromptTokSec > 0 {
 					m.metrics.PromptTokSec = msg.res.PromptTokSec
 				}
-				if msg.res.Interrupted {
-					t.Aborted = true
+				if msg.res.Interrupted || msg.res.Err != nil {
+					if msg.res.Interrupted {
+						t.Aborted = true
+					}
 					for i := range t.ToolCalls {
 						if t.ToolCalls[i].Status == "running" {
-							t.ToolCalls[i].Status = "interrupted"
+							if msg.res.Interrupted {
+								t.ToolCalls[i].Status = "interrupted"
+							} else {
+								t.ToolCalls[i].Status = "error"
+							}
 						}
 					}
 					t.ToolVer++
@@ -909,51 +962,122 @@ func renderToolCardBlock(m *Model, tc toolCard, innerW int, streaming bool, spin
 
 // --- Modal key handlers ---
 
-func (m *Model) handlePermModalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m *Model) finishPermission(resp agent.PermissionResponse, resume bool) (tea.Model, tea.Cmd) {
 	pm := m.permModal
 	if pm == nil {
 		return m, nil
 	}
-	respond := func(resp agent.PermissionResponse) (tea.Model, tea.Cmd) {
-		pm.replyCh <- resp
-		gen, ch, doneCh := pm.gen, pm.ch, pm.doneCh
-		m.permModal = nil
-		return m, readAgentEvtCmd(gen, ch, doneCh)
+	// Buffered reply channel: the agent may already be unwinding after Esc.
+	select {
+	case pm.replyCh <- resp:
+	default:
+	}
+	gen, ch, doneCh := pm.gen, pm.ch, pm.doneCh
+	m.permModal = nil
+	m.refreshChatView(true)
+	m.chatView.GotoBottom()
+	if m.runTab == runTabChat {
+		m.chatInput.Focus()
+	}
+	if !resume {
+		return m, nil
+	}
+	return m, readAgentEvtCmd(gen, ch, doneCh)
+}
+
+func (m *Model) abortTurnFromPrompt() (tea.Model, tea.Cmd) {
+	pm := m.permModal
+	if pm == nil {
+		return m, nil
+	}
+	select {
+	case pm.replyCh <- agent.PermissionResponse{Choice: agent.PermDeny}:
+	default:
+	}
+	m.permModal = nil
+	m.stopChatStream()
+	m.chatInput.Focus()
+	m.toastf("turn cancelled")
+	return m, nil
+}
+
+func (m *Model) movePermissionChoice(delta int) {
+	pm := m.permModal
+	if pm == nil {
+		return
+	}
+	for i := 0; i < 3; i++ {
+		pm.choice = (pm.choice + delta + 3) % 3
+		if pm.choice != permChoiceAlways || !pm.prompt.HighRisk {
+			break
+		}
+	}
+	m.refreshChatView(false)
+}
+
+func (m *Model) choosePermission(choice int) (tea.Model, tea.Cmd) {
+	pm := m.permModal
+	if pm == nil {
+		return m, nil
+	}
+	if choice == permChoiceAlways && pm.prompt.HighRisk {
+		m.toastf("high-risk commands cannot be always-allowed")
+		return m, nil
+	}
+	switch choice {
+	case permChoiceAllow:
+		return m.finishPermission(agent.PermissionResponse{Choice: agent.PermAllowOnce}, true)
+	case permChoiceAlways:
+		return m.finishPermission(agent.PermissionResponse{Choice: agent.PermAllowSession}, true)
+	default:
+		return m.finishPermission(agent.PermissionResponse{Choice: agent.PermDeny}, true)
+	}
+}
+
+func (m *Model) handlePermModalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	pm := m.permModal
+	if pm == nil {
+		return m, nil
 	}
 
 	if pm.enteringNote {
 		switch msg.Type {
 		case tea.KeyEnter:
 			note := strings.TrimSpace(pm.noteInput.Value())
-			return respond(agent.PermissionResponse{Choice: agent.PermDenyWithNote, Note: note})
+			return m.finishPermission(agent.PermissionResponse{Choice: agent.PermDenyWithNote, Note: note}, true)
 		case tea.KeyEsc:
 			pm.enteringNote = false
 			pm.noteInput.Blur()
+			m.refreshChatView(false)
 			return m, nil
 		}
 		var c tea.Cmd
 		pm.noteInput, c = pm.noteInput.Update(msg)
+		m.refreshChatView(false)
 		return m, c
 	}
 
 	switch msg.String() {
-	case "y", "enter":
-		return respond(agent.PermissionResponse{Choice: agent.PermAllowOnce})
-	case "a":
-		return respond(agent.PermissionResponse{Choice: agent.PermAllowSession})
-	case "n", "esc":
-		return respond(agent.PermissionResponse{Choice: agent.PermDeny})
+	case "up", "k":
+		m.movePermissionChoice(-1)
+		return m, nil
+	case "down", "j", "tab":
+		m.movePermissionChoice(1)
+		return m, nil
+	case "1", "y":
+		return m.choosePermission(permChoiceAllow)
+	case "2", "a":
+		return m.choosePermission(permChoiceAlways)
+	case "3", "n":
+		return m.choosePermission(permChoiceDeny)
+	case "enter":
+		return m.choosePermission(pm.choice)
+	case "esc":
+		return m.abortTurnFromPrompt()
 	case "d":
 		pm.enteringNote = true
 		pm.noteInput.Focus()
-		return m, nil
-	case "up", "k":
-		if pm.diffScroll > 0 {
-			pm.diffScroll--
-		}
-		return m, nil
-	case "down", "j":
-		pm.diffScroll++
+		m.refreshChatView(false)
 		return m, nil
 	}
 	return m, nil
@@ -965,32 +1089,73 @@ func (m *Model) handleAskModalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	respond := func(ans string, err error) (tea.Model, tea.Cmd) {
-		am.replyCh <- askUserReply{Answer: ans, Err: err}
+		select {
+		case am.replyCh <- askUserReply{Answer: ans, Err: err}:
+		default:
+		}
 		gen, ch, doneCh := am.gen, am.ch, am.doneCh
 		m.askModal = nil
+		m.refreshChatView(true)
+		m.chatView.GotoBottom()
+		if m.runTab == runTabChat {
+			m.chatInput.Focus()
+		}
 		return m, readAgentEvtCmd(gen, ch, doneCh)
 	}
 
-	if len(am.options) > 0 && !am.input.Focused() {
-		switch msg.String() {
-		case "up", "k":
+	beginTyping := func(seed string) (tea.Model, tea.Cmd) {
+		am.inputMode = true
+		am.cursor = len(am.options)
+		am.input.SetValue(seed)
+		am.input.CursorEnd()
+		am.input.Focus()
+		return m, nil
+	}
+	backToOptions := func() (tea.Model, tea.Cmd) {
+		am.inputMode = false
+		am.input.Blur()
+		if n := len(am.options); n > 0 && am.cursor >= n {
+			am.cursor = n - 1
+		}
+		return m, nil
+	}
+
+	if len(am.options) > 0 && !am.inputMode {
+		switch msg.Type {
+		case tea.KeyUp:
 			if am.cursor > 0 {
 				am.cursor--
 			}
 			return m, nil
-		case "down", "j":
-			if am.cursor < len(am.options)-1 {
+		case tea.KeyDown:
+			if am.cursor < len(am.options) {
 				am.cursor++
 			}
 			return m, nil
-		case "enter":
-			return respond(am.options[am.cursor], nil)
-		case "esc":
-			return respond("", context.Canceled)
-		default:
-			if n, err := strconv.Atoi(msg.String()); err == nil && n >= 1 && n <= len(am.options) {
-				return respond(am.options[n-1], nil)
+		case tea.KeyEnter:
+			if am.cursor < 0 || am.cursor > len(am.options) {
+				am.cursor = 0
 			}
+			if am.cursor == len(am.options) {
+				return beginTyping("")
+			}
+			return respond(am.options[am.cursor], nil)
+		case tea.KeyTab:
+			return beginTyping("")
+		case tea.KeyEsc:
+			return respond("", context.Canceled)
+		case tea.KeySpace:
+			return beginTyping(" ")
+		case tea.KeyRunes:
+			if len(msg.Runes) == 1 && msg.Runes[0] >= '1' && msg.Runes[0] <= '9' {
+				n := int(msg.Runes[0] - '0')
+				if n <= len(am.options) {
+					return respond(am.options[n-1], nil)
+				}
+				return m, nil
+			}
+			// Typing anything else starts a free-form answer.
+			return beginTyping(string(msg.Runes))
 		}
 		return m, nil
 	}
@@ -998,11 +1163,17 @@ func (m *Model) handleAskModalKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.Type {
 	case tea.KeyEnter:
 		ans := strings.TrimSpace(am.input.Value())
-		if ans == "" && len(am.options) > 0 && am.cursor >= 0 && am.cursor < len(am.options) {
-			ans = am.options[am.cursor]
+		if ans == "" {
+			if len(am.options) > 0 {
+				return backToOptions()
+			}
+			return m, nil
 		}
 		return respond(ans, nil)
 	case tea.KeyEsc:
+		if len(am.options) > 0 {
+			return backToOptions()
+		}
 		return respond("", context.Canceled)
 	}
 	var c tea.Cmd
@@ -1107,101 +1278,135 @@ func (m *Model) appendWebNotice() {
 
 // --- Modal overlays ---
 
-func (m *Model) overlayPermModal(bg string) string {
+// renderPermissionInline draws the pending tool permission as a card inside the chat
+// transcript, so the turn never hides the conversation behind a modal overlay.
+func (m *Model) renderPermissionInline(innerW int) []string {
 	pm := m.permModal
-	if pm == nil {
-		return bg
+	if pm == nil || innerW < 24 {
+		return nil
 	}
-	w := m.width
-	h := m.height
-	boxW := w - 8
-	if boxW > 86 {
-		boxW = 86
+	cardW := innerW
+	if cardW > 100 {
+		cardW = 100
 	}
-	if boxW < 44 {
-		boxW = 44
+	contentW := cardW - 4
+	if contentW < 12 {
+		contentW = 12
 	}
-	innerW := boxW - 4
 
 	var lines []string
-	hdr := m.sty.sAccentBold.Render("Permission Required: " + pm.prompt.Tool)
+	hdr := m.sty.sAccentBold.Render("Permission needed · " + pm.prompt.Tool)
 	if pm.prompt.HighRisk {
 		hdr += "  " + m.sty.badge(" HIGH-RISK ", m.sty.t.Error)
 	}
-	lines = append(lines, truncateANSI(hdr, innerW))
-	if pm.prompt.Summary != "" {
-		lines = append(lines, truncateANSI(m.sty.sText.Render(pm.prompt.Summary), innerW))
+	lines = append(lines, truncateANSI(hdr, contentW))
+	// Keep the whole card inside the chat viewport on 80x24 terminals; the
+	// tool, reason and choices matter more than a long diff preview.
+	maxPreview := m.height - 20
+	if maxPreview < 2 {
+		maxPreview = 2
+	}
+	if maxPreview > 14 {
+		maxPreview = 14
+	}
+	if pm.prompt.Summary != "" && pm.prompt.Diff == "" {
+		for _, sl := range wrapText(pm.prompt.Summary, contentW) {
+			lines = append(lines, m.sty.sText.Render(sl))
+		}
 	}
 	if pm.prompt.Reason != "" {
-		lines = append(lines, truncateANSI(m.sty.sWarning.Render("Reason: "+pm.prompt.Reason), innerW))
+		for _, rl := range wrapText("Reason: "+pm.prompt.Reason, contentW) {
+			lines = append(lines, m.sty.sWarning.Render(rl))
+		}
 	}
 	if pm.prompt.Tool == "run_command" {
-		lines = append(lines, truncateANSI(m.sty.sMuted.Render("Note: runs with your own user rights; sandbox confines file tools only."), innerW))
+		for _, nl := range wrapText("Runs with your own user rights; the sandbox confines file tools only.", contentW) {
+			lines = append(lines, m.sty.sMuted.Render(nl))
+		}
 	}
-	lines = append(lines, m.sty.sMuted.Render(strings.Repeat("─", innerW)))
 
 	if pm.prompt.Diff != "" {
 		diffInfo := fmt.Sprintf("Diff (%s): +%d / -%d lines", pm.prompt.DiffPath, pm.prompt.DiffAdded, pm.prompt.DiffRemoved)
-		lines = append(lines, truncateANSI(m.sty.accent2().Render(diffInfo), innerW))
+		lines = append(lines, truncateANSI(m.sty.accent2().Render(diffInfo), contentW))
 		diffLines := strings.Split(strings.TrimRight(pm.prompt.Diff, "\n"), "\n")
-		maxDiff := h - 14
-		if maxDiff < 4 {
-			maxDiff = 4
+		shown := len(diffLines)
+		truncated := false
+		if shown > maxPreview {
+			shown = maxPreview - 1
+			if shown < 0 {
+				shown = 0
+			}
+			truncated = true
 		}
-		if maxDiff > 16 {
-			maxDiff = 16
-		}
-		start := pm.diffScroll
-		if start > len(diffLines)-maxDiff {
-			start = len(diffLines) - maxDiff
-		}
-		if start < 0 {
-			start = 0
-		}
-		pm.diffScroll = start
-		end := start + maxDiff
-		if end > len(diffLines) {
-			end = len(diffLines)
-		}
-		for _, dl := range diffLines[start:end] {
-			styled := m.sty.sMuted.Render(truncate(dl, innerW))
-			if strings.HasPrefix(dl, "+") && !strings.HasPrefix(dl, "+++") {
-				styled = m.sty.sSuccess.Render(truncate(dl, innerW))
-			} else if strings.HasPrefix(dl, "-") && !strings.HasPrefix(dl, "---") {
-				styled = m.sty.sDanger.Render(truncate(dl, innerW))
-			} else if strings.HasPrefix(dl, "@@") {
-				styled = m.sty.accent2().Render(truncate(dl, innerW))
+		for _, dl := range diffLines[:shown] {
+			txt := truncate(dl, contentW)
+			styled := m.sty.sMuted.Render(txt)
+			switch {
+			case strings.HasPrefix(dl, "+") && !strings.HasPrefix(dl, "+++"):
+				styled = m.sty.sSuccess.Render(txt)
+			case strings.HasPrefix(dl, "-") && !strings.HasPrefix(dl, "---"):
+				styled = m.sty.sDanger.Render(txt)
+			case strings.HasPrefix(dl, "@@"):
+				styled = m.sty.accent2().Render(txt)
 			}
 			lines = append(lines, styled)
 		}
-		if len(diffLines) > maxDiff {
-			lines = append(lines, m.sty.sMuted.Render(fmt.Sprintf("[↑/↓ scroll diff %d-%d of %d]", start+1, end, len(diffLines))))
+		if truncated {
+			lines = append(lines, m.sty.sMuted.Render(fmt.Sprintf("… %d more diff lines (expand the tool card after deciding)", len(diffLines)-shown)))
 		}
 	} else if pm.prompt.ArgsPretty != "" {
-		for i, al := range wrapText(pm.prompt.ArgsPretty, innerW) {
-			if i >= 6 {
-				lines = append(lines, m.sty.sMuted.Render("…"))
+		wrapped := wrapText(pm.prompt.ArgsPretty, contentW)
+		limit := maxPreview
+		if len(wrapped) > limit {
+			limit--
+			if limit < 0 {
+				limit = 0
+			}
+		}
+		for i, al := range wrapped {
+			if i >= limit {
+				lines = append(lines, m.sty.sMuted.Render(fmt.Sprintf("… %d more lines", len(wrapped)-i)))
 				break
 			}
 			lines = append(lines, m.sty.sText.Render(al))
 		}
 	}
 
-	lines = append(lines, m.sty.sMuted.Render(strings.Repeat("─", innerW)))
+	lines = append(lines, m.sty.sMuted.Render(strings.Repeat("─", contentW)))
 	if pm.enteringNote {
 		lines = append(lines, m.sty.sWarning.Render("Deny note: ")+pm.noteInput.View())
-		lines = append(lines, m.sty.sMuted.Render("enter submit deny+note · esc back"))
+		lines = append(lines, truncateANSI(m.sty.sMuted.Render("enter submit deny+note · esc back"), contentW))
 	} else {
-		actions := "[y] allow once  [a] allow session  [n] deny  [d] deny with note"
-		if pm.prompt.HighRisk {
-			actions = "[y] allow once  [n] deny  [d] deny with note  (high-risk: no session allow)"
+		type permOpt struct {
+			label string
+			hint  string
 		}
-		lines = append(lines, truncateANSI(m.sty.sAccent.Render(actions), innerW))
+		opts := []permOpt{
+			{"Allow once", "run this call only"},
+			{"Always allow " + pm.prompt.Tool, "no more prompts for this tool this session"},
+			{"Don't allow", "model receives a denial"},
+		}
+		if pm.prompt.HighRisk {
+			opts[permChoiceAlways] = permOpt{"Always allow", "unavailable for high-risk commands"}
+		}
+		for i, opt := range opts {
+			marker := "  "
+			st := m.sty.sText
+			if i == pm.choice {
+				marker = "▸ "
+				st = m.sty.sAccentBold
+			}
+			if i == permChoiceAlways && pm.prompt.HighRisk {
+				st = m.sty.sMuted
+			}
+			row := fmt.Sprintf("%s%d. %-24s %s", marker, i+1, opt.label, opt.hint)
+			lines = append(lines, st.Render(truncate(row, contentW)))
+		}
+		lines = append(lines, truncateANSI(m.sty.sMuted.Render("↑↓ choose · enter confirm · 1/2/3 · d note · esc cancel"), contentW))
 	}
 
-	box := m.sty.panel(boxW, len(lines)+2, "Agent Permission", true, lines)
-	return lipgloss.Place(w, h, lipgloss.Center, lipgloss.Center, box,
-		lipgloss.WithWhitespaceChars(" "), lipgloss.WithWhitespaceForeground(m.sty.t.Bg))
+	box := m.sty.panel(cardW, len(lines)+3, "Agent Permission", true, lines)
+	return append(strings.Split(box, "\n"), "")
 }
 
 func (m *Model) overlayAskModal(bg string) string {
@@ -1220,29 +1425,105 @@ func (m *Model) overlayAskModal(bg string) string {
 	innerW := boxW - 4
 
 	var lines []string
-	for _, ql := range wrapText(am.question, innerW) {
+	qLines := wrapText(am.question, innerW)
+	// Keep the question from pushing the choices/input off the bottom of the screen.
+	maxQLines := h - 10
+	if maxQLines < 2 {
+		maxQLines = 2
+	}
+	if len(qLines) > maxQLines {
+		qLines = append(qLines[:maxQLines-1], "…")
+	}
+	for _, ql := range qLines {
 		lines = append(lines, m.sty.sText.Bold(true).Render(ql))
 	}
 	lines = append(lines, "")
-	if len(am.options) > 0 {
-		for i, opt := range am.options {
+
+	if len(am.options) > 0 && !am.inputMode {
+		// Options wrap instead of being cut off at the box edge. Keep the whole
+		// modal inside the terminal by windowing very long option lists.
+		maxOpts := (h - 9 - len(qLines)) / 3
+		if maxOpts < 1 {
+			maxOpts = 1
+		}
+		if maxOpts > len(am.options) {
+			maxOpts = len(am.options)
+		}
+		if am.cursor < len(am.options) {
+			if am.cursor < am.scroll {
+				am.scroll = am.cursor
+			}
+			if am.cursor >= am.scroll+maxOpts {
+				am.scroll = am.cursor - maxOpts + 1
+			}
+		}
+		maxScroll := len(am.options) - maxOpts
+		if maxScroll < 0 {
+			maxScroll = 0
+		}
+		if am.scroll > maxScroll {
+			am.scroll = maxScroll
+		}
+		if am.scroll < 0 {
+			am.scroll = 0
+		}
+		end := am.scroll + maxOpts
+		if end > len(am.options) {
+			end = len(am.options)
+		}
+		if am.scroll > 0 {
+			lines = append(lines, m.sty.sMuted.Render(fmt.Sprintf("  ↑ %d more", am.scroll)))
+		}
+		for i := am.scroll; i < end; i++ {
 			pref := "  "
 			st := m.sty.sText
 			if i == am.cursor {
-				pref = "> "
+				pref = "▸ "
 				st = m.sty.sAccentBold
 			}
-			lines = append(lines, truncateANSI(st.Render(fmt.Sprintf("%s%d. %s", pref, i+1, opt)), innerW))
+			head := fmt.Sprintf("%s%d. ", pref, i+1)
+			cont := strings.Repeat(" ", displayWidth(head))
+			wrapped := wrapText(am.options[i], innerW-displayWidth(head))
+			if len(wrapped) > 3 {
+				wrapped = wrapped[:3]
+				wrapped[2] += "…"
+			}
+			for j, ol := range wrapped {
+				line := head + ol
+				if j > 0 {
+					line = cont + ol
+				}
+				lines = append(lines, st.Render(line))
+			}
 		}
+		if end < len(am.options) {
+			lines = append(lines, m.sty.sMuted.Render(fmt.Sprintf("  ↓ %d more", len(am.options)-end)))
+		}
+		sel := am.cursor == len(am.options)
+		pref, st := "  ", m.sty.sText
+		if sel {
+			pref, st = "▸ ", m.sty.sAccentBold
+		}
+		lines = append(lines, st.Render(pref+"✎ Type a different answer…"))
 		lines = append(lines, "")
-		lines = append(lines, m.sty.sMuted.Render("↑↓ move · 1-9 select · enter confirm · esc cancel"))
+		lines = append(lines, truncateANSI(m.sty.sMuted.Render("↑↓ choose · 1-9 pick · type to answer · enter confirm · esc cancel"), innerW))
 	} else {
-		lines = append(lines, m.sty.sAccent.Render("› ")+am.input.View())
-		lines = append(lines, "")
-		lines = append(lines, m.sty.sMuted.Render("enter submit · esc cancel"))
+		if am.inputMode {
+			lines = append(lines, m.sty.sAccent.Render("› ")+am.input.View())
+			lines = append(lines, "")
+			if len(am.options) > 0 {
+				lines = append(lines, m.sty.sMuted.Render("enter submit · esc back to choices"))
+			} else {
+				lines = append(lines, m.sty.sMuted.Render("enter submit · esc cancel"))
+			}
+		} else {
+			lines = append(lines, m.sty.sAccent.Render("› ")+am.input.View())
+			lines = append(lines, "")
+			lines = append(lines, m.sty.sMuted.Render("enter submit · esc cancel"))
+		}
 	}
 
-	box := m.sty.panel(boxW, len(lines)+2, "Agent Question", true, lines)
+	box := m.sty.panel(boxW, len(lines)+3, "Agent Question", true, lines)
 	return lipgloss.Place(w, h, lipgloss.Center, lipgloss.Center, box,
 		lipgloss.WithWhitespaceChars(" "), lipgloss.WithWhitespaceForeground(m.sty.t.Bg))
 }
@@ -1307,7 +1588,7 @@ func (m *Model) overlayToolsModal(bg string) string {
 	lines = append(lines, truncateANSI(m.sty.accent2().Render(fmt.Sprintf("Active tool schema cost: %s%d tok", tokLabel, toks)), innerW))
 	lines = append(lines, m.sty.sMuted.Render("↑↓ select · space/enter toggle · esc close"))
 
-	box := m.sty.panel(boxW, len(lines)+2, "Agent Tools (/tools)", true, lines)
+	box := m.sty.panel(boxW, len(lines)+3, "Agent Tools (/tools)", true, lines)
 	return lipgloss.Place(w, h, lipgloss.Center, lipgloss.Center, box,
 		lipgloss.WithWhitespaceChars(" "), lipgloss.WithWhitespaceForeground(m.sty.t.Bg))
 }
@@ -1368,7 +1649,7 @@ func (m *Model) overlayPermsModal(bg string) string {
 	lines = append(lines, "")
 	lines = append(lines, m.sty.sMuted.Render("1/2/3 mode · c clear allowlist · t clear taint · esc close"))
 
-	box := m.sty.panel(boxW, len(lines)+2, "Agent Permissions (/permissions)", true, lines)
+	box := m.sty.panel(boxW, len(lines)+3, "Agent Permissions (/permissions)", true, lines)
 	return lipgloss.Place(w, h, lipgloss.Center, lipgloss.Center, box,
 		lipgloss.WithWhitespaceChars(" "), lipgloss.WithWhitespaceForeground(m.sty.t.Bg))
 }

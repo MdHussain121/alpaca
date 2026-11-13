@@ -16,7 +16,8 @@
 | `read-auto` *(default)* | Auto | Ask | Ask | Ask | Always Ask |
 | `workspace-auto` | Auto | Auto | Ask | Ask | Always Ask |
 
-- **`run_command` and MCP tools (`server.tool`) always prompt for confirmation** unless explicitly allowlisted for the session by the user.
+- **`run_command` and MCP tools (`server.tool`) always prompt for confirmation** unless explicitly allowlisted for the session by the user. Approvals appear inline in the transcript with **Allow once**, **Always allow** (the whole tool for the rest of the session), and **Don't allow**; `esc` cancels the turn instead of only denying one call.
+- High-risk commands (destructive deletes, registry/network changes, encoded interpreter pipes) are never added to the session allowlist and always prompt.
 - Prompt approvals never silently elevate permissions from tool output.
 
 ## 3. Web Content & Prompt Injection Defense

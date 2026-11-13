@@ -480,6 +480,10 @@ func (m *Model) refreshChatView(scrollBottom bool) {
 	if innerW < 20 {
 		innerW = 60
 	}
+	if m.permModal != nil {
+		// A pending permission card must be visible even if the user scrolled up.
+		scrollBottom = true
+	}
 
 	if len(m.chatMsgs) == 0 {
 		name := "model"
@@ -497,7 +501,13 @@ func (m *Model) refreshChatView(scrollBottom bool) {
 		if m.status != "READY" {
 			lines = append(lines, m.sty.warning().Render("  Waiting for llama-server to finish loading ("+m.status+")…"))
 		}
+		if m.permModal != nil {
+			lines = append(lines, m.renderPermissionInline(innerW)...)
+		}
 		m.chatView.SetContent(strings.Join(lines, "\n"))
+		if scrollBottom {
+			m.chatView.GotoBottom()
+		}
 		return
 	}
 
@@ -507,10 +517,13 @@ func (m *Model) refreshChatView(scrollBottom bool) {
 		lines := m.renderChatTurn(&m.chatMsgs[i], innerW, isLast)
 		out = append(out, lines...)
 	}
+	if m.permModal != nil {
+		out = append(out, m.renderPermissionInline(innerW)...)
+	}
 
 	wasAtBottom := len(m.chatMsgs) <= 1 || m.chatView.AtBottom()
 	m.chatView.SetContent(strings.Join(out, "\n"))
-	if scrollBottom && wasAtBottom {
+	if scrollBottom && (wasAtBottom || m.permModal != nil) {
 		m.chatView.GotoBottom()
 	}
 }

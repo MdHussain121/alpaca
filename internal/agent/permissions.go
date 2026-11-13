@@ -39,11 +39,13 @@ const (
 	DecisionDeny  Decision = "deny"
 )
 
-// AllowlistEntry represents one approved (tool, normalized args) signature for the session.
+// AllowlistEntry represents one approved tool for the session. Entries are either
+// scoped to one normalized argument signature or to every call of a tool.
 type AllowlistEntry struct {
 	Key     string
 	Tool    string
 	Summary string
+	AllArgs bool
 }
 
 // PermissionInput describes everything needed to evaluate a single tool invocation.
@@ -125,12 +127,39 @@ func (p *PermissionEngine) AllowSession(tool string, args map[string]any, summar
 	}
 }
 
+// AllowToolSession approves every call to a tool for the rest of the session,
+// regardless of its arguments. This backs the "always allow" prompt choice.
+func (p *PermissionEngine) AllowToolSession(tool string) {
+	tool = strings.ToLower(strings.TrimSpace(tool))
+	if tool == "" {
+		return
+	}
+	key := "tool:" + tool
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if _, exists := p.allowlist[key]; !exists {
+		p.order = append(p.order, key)
+	}
+	p.allowlist[key] = AllowlistEntry{
+		Key:     key,
+		Tool:    tool,
+		Summary: "always allow (all calls this session)",
+		AllArgs: true,
+	}
+}
+
+func (p *PermissionEngine) toolAllowedLocked(tool string) bool {
+	_, ok := p.allowlist["tool:"+strings.ToLower(strings.TrimSpace(tool))]
+	return ok
+}
+
 // Evaluate decides allow / ask / deny from (mode, class, workspace, protected, tainted, highRisk, allowlist).
 func (p *PermissionEngine) Evaluate(in PermissionInput) (Decision, string) {
 	p.mu.RLock()
 	mode := p.mode
 	sig := SignatureKey(in.Tool, in.CanonicalArgs)
 	_, allowlisted := p.allowlist[sig]
+	toolAllowlisted := p.toolAllowedLocked(in.Tool)
 	p.mu.RUnlock()
 
 	if in.ProtectedPath && (in.Class == ClassWrite || in.Class == ClassExec) {
@@ -149,7 +178,7 @@ func (p *PermissionEngine) Evaluate(in PermissionInput) (Decision, string) {
 		return DecisionAllow, ""
 	}
 
-	if allowlisted && !in.Tainted {
+	if (allowlisted || toolAllowlisted) && !in.Tainted {
 		return DecisionAllow, "matched session allowlist"
 	}
 

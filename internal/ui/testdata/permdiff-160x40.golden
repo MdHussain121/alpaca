@@ -1,15 +1,40 @@
-╭────────────────────────────────────────────────────────────────────────────────────╮                                     
-                                     │ Agent Permission                                                                   │                                     
-                                     │ Permission Required: edit_file                                                     │                                     
-                                     │ src/config.go                                                                      │                                     
-                                     │ Reason: file modification requires approval                                        │                                     
-                                     │ ────────────────────────────────────────────────────────────────────────────────── │                                     
-                                     │ Diff (src/config.go): +1 / -1 lines                                                │                                     
-                                     │ --- a/src/config.go                                                                │                                     
-                                     │ +++ b/src/config.go                                                                │                                     
-                                     │ @@ -1,3 +1,3 @@                                                                    │                                     
-                                     │  package cfg                                                                       │                                     
-                                     │ -var Port = 8080                                                                   │                                     
-                                     │ +var Port = 9090                                                                   │                                     
-                                     │ ────────────────────────────────────────────────────────────────────────────────── │                                     
-                                     ╰────────────────────────────────────────────────────────────────────────────────────╯
+alpaca  ·  Demo-Coder-8B · http://127.0.0.1:8080/v1                                                                                                      READY 
+  READY    gen  — t/s                                                                                                                                           
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ TUI Chat  [tab: logs]                                                                                                                                        │
+│ ctx ░░░░░░░░░░ 0/8192 (0%)  gen — t/s  effort default  think on  prof:coding  perm:read-auto  ws:demo-ws                                                     │
+│ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│                                                                                                                                                              │
+│   TUI Chat ready — Demo-Coder-8B                                                                                                                             │
+│   Type a prompt below and press Enter, or /help for commands.                                                                                                │
+│ ╭──────────────────────────────────────────────────────────────────────────────────────────────────╮                                                         │
+│ │ Agent Permission                                                                                 │                                                         │
+│ │ Permission needed · edit_file                                                                    │                                                         │
+│ │ Reason: file modification requires approval                                                      │                                                         │
+│ │ Diff (src/config.go): +1 / -1 lines                                                              │                                                         │
+│ │ --- a/src/config.go                                                                              │                                                         │
+│ │ +++ b/src/config.go                                                                              │                                                         │
+│ │ @@ -1,3 +1,3 @@                                                                                  │                                                         │
+│ │  package cfg                                                                                     │                                                         │
+│ │ -var Port = 8080                                                                                 │                                                         │
+│ │ +var Port = 9090                                                                                 │                                                         │
+│ │ ──────────────────────────────────────────────────────────────────────────────────────────────── │                                                         │
+│ │ ▸ 1. Allow once               run this call only                                                 │                                                         │
+│ │   2. Always allow edit_file   no more prompts for this tool this session                         │                                                         │
+│ │   3. Don't allow              model receives a denial                                            │                                                         │
+│ │ ↑↓ choose · enter confirm · 1/2/3 · d note · esc cancel                                          │                                                         │
+│ ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯                                                         │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│                                                                                                                                                              │
+│ ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│ › Type a message… (enter send · /effort <lvl> · /help)                                                                                                       │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+enter send · tab logs · ↑↓/pgup scroll · ctrl+e effort · ctrl+t thinking · ctrl+l clear · esc stop/back · ctrl+c quit

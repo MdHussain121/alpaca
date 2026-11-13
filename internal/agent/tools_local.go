@@ -422,7 +422,7 @@ func buildLocalTools() []ToolSpec {
 			Name:        "ask_user",
 			Group:       "core",
 			Class:       ClassNone,
-			Description: "Pause agent execution to ask the user a clarifying question (optionally with suggested choices).",
+			Description: "Pause agent execution to ask the user a clarifying question (optionally with suggested choices; the user can always type a different answer).",
 			Parameters: schemaObj(map[string]any{
 				"question": schemaStr("Question to present to the user."),
 				"options": map[string]any{

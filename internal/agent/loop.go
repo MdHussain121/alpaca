@@ -21,8 +21,8 @@ const (
 type PermissionChoice int
 
 const (
-	PermAllowOnce PermissionChoice = iota
-	PermAllowSession
+	PermAllowOnce    PermissionChoice = iota
+	PermAllowSession                  // "always allow": every later call of this tool in the session
 	PermDeny
 	PermDenyWithNote
 )
@@ -441,7 +441,12 @@ func executeSingleCall(
 			}
 			switch resp.Choice {
 			case PermAllowSession:
-				req.Permissions.AllowSession(toolName, permIn.CanonicalArgs, permIn.Summary)
+				if permIn.HighRisk {
+					// High-risk commands are never session-allowlisted; treat a stale
+					// "always allow" response as a one-off approval.
+					break
+				}
+				req.Permissions.AllowToolSession(toolName)
 			case PermDeny:
 				er := ToolExecResult{Output: "Denied by user.", Summary: "denied", IsError: true}
 				return runner.APIMessage{Role: "tool", ToolCallID: tc.ID, Name: toolName, Content: er.Output}, er, false
